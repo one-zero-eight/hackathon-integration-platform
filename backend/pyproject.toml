@@ -6,8 +6,15 @@ authors = ["one-zero-eight <https://t.me/one_zero_eight>"]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "colorlog>=6.9.0",
     "fastapi>=0.115.12",
+    "fastapi-derive-responses>=0.1.4",
+    "fastapi-swagger>=0.2.16",
+    "httpx>=0.28.1",
+    "itsdangerous>=2.2.0",
     "pyyaml>=6.0.2",
+    "sqlalchemy>=2.0.40",
+    "uvicorn>=0.34.1",
 ]
 
 [tool.uv]
