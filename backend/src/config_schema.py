@@ -22,16 +22,6 @@ class Settings(SettingBaseModel):
     "Allowed origins for CORS: from which domains requests to the API are allowed. Specify as a regex: `https://.*.innohassle.ru`"
     session_secret_key: SecretStr
     "Secret key for session management"
-    files_dir: Path = Path("data/files")
-    "Path to the directory where files will be stored"
-    bot_token: SecretStr
-    "Telegram bot token, get it from @BotFather"
-    bot_username: str
-    "Telegram bot username"
-    superadmin_telegram_id: str
-    "Telegram ID of the first superadmin"
-    default_patrons: list[str] = []
-    "List of Telegram IDs of default patrons"
 
     @classmethod
     def from_yaml(cls, path: Path) -> "Settings":

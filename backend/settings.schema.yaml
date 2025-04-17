@@ -30,37 +30,7 @@ properties:
     title: Session Secret Key
     type: string
     writeOnly: true
-  files_dir:
-    default: data/files
-    description: Path to the directory where files will be stored
-    format: path
-    title: Files Dir
-    type: string
-  bot_token:
-    description: Telegram bot token, get it from @BotFather
-    format: password
-    title: Bot Token
-    type: string
-    writeOnly: true
-  bot_username:
-    description: Telegram bot username
-    title: Bot Username
-    type: string
-  superadmin_telegram_id:
-    description: Telegram ID of the first superadmin
-    title: Superadmin Telegram Id
-    type: string
-  default_patrons:
-    default: []
-    description: List of Telegram IDs of default patrons
-    items:
-      type: string
-    title: Default Patrons
-    type: array
 required:
 - session_secret_key
-- bot_token
-- bot_username
-- superadmin_telegram_id
 title: Settings
 type: object
