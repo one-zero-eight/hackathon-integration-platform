@@ -1,0 +1,5 @@
+$schema: "./settings.schema.yaml"
+session_secret_key: null # Secret key for session management, can be generated with `openssl rand -hex 32`
+bot_token: null # Telegram bot token, get it from @BotFather
+bot_username: null # Telegram bot username
+superadmin_telegram_id: null # Telegram ID of the superadmin user
