@@ -513,58 +513,6 @@ export default function ChatInterface() {
                     />
                     <span className="sr-only">Add</span>
                   </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      'flex h-8 items-center gap-1.5 rounded-full border-gray-200 px-3 transition-colors',
-                      activeButton === 'deepSearch' && 'border-gray-300 bg-gray-100'
-                    )}
-                    onClick={() => toggleButton('deepSearch')}
-                    disabled={isStreaming}
-                  >
-                    <Search
-                      className={cn(
-                        'h-4 w-4 text-gray-500',
-                        activeButton === 'deepSearch' && 'text-gray-700'
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        'text-sm text-gray-900',
-                        activeButton === 'deepSearch' && 'font-medium'
-                      )}
-                    >
-                      DeepSearch
-                    </span>
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      'flex h-8 items-center gap-1.5 rounded-full border-gray-200 px-3 transition-colors',
-                      activeButton === 'think' && 'border-gray-300 bg-gray-100'
-                    )}
-                    onClick={() => toggleButton('think')}
-                    disabled={isStreaming}
-                  >
-                    <Lightbulb
-                      className={cn(
-                        'h-4 w-4 text-gray-500',
-                        activeButton === 'think' && 'text-gray-700'
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        'text-sm text-gray-900',
-                        activeButton === 'think' && 'font-medium'
-                      )}
-                    >
-                      Think
-                    </span>
-                  </Button>
                 </div>
 
                 <Button
