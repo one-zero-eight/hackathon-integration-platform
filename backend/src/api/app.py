@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_swagger import patch_fastapi
 
-import api.logging_  # noqa: F401
+import src.api.logging_  # noqa: F401
 from src.api.lifespan import lifespan
 from src.config import api_settings
 

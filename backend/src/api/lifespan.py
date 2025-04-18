@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-import api.logging_  # noqa: F401
+import src.api.logging_  # noqa: F401
 from src.config import api_settings
 from src.db import SQLAlchemyStorage
 
