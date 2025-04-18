@@ -18,6 +18,8 @@ class ApiSettings(BaseModel):
     )
     "PostgreSQL database connection URL"
     session_secret_key: SecretStr = Field(..., example="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    mws_gpt_api_key: SecretStr = Field(..., example="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    "API key of MTS MWS GPT"
 
 
 class Settings(BaseModel):
