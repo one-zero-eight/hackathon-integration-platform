@@ -1,8 +1,8 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { chatData, responses } from '@/lib/constants'
-import { ActiveButton, Message, MessageSection, MessageType } from '@/lib/interfaces'
+import { responses } from '@/lib/constants'
+import { ActiveButton, Messages, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
 import { ArrowUp, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
 import type React from 'react'
@@ -10,39 +10,26 @@ import { useEffect, useRef, useState } from 'react'
 import { WavyBackground } from './ui/wavy-background'
 
 export default function ChatInterface() {
+  const [messages, setMessages] = useState<Messages[]>([])
   const [isNewChat, setNewChat] = useState<boolean>(true)
   const [inputValue, setInputValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
-  const newSectionRef = useRef<HTMLDivElement>(null)
   const [hasTyped, setHasTyped] = useState(false)
   const [activeButton, setActiveButton] = useState<ActiveButton>('none')
   const [isMobile, setIsMobile] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [messageSections, setMessageSections] = useState<MessageSection[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [loadingMessageId, setLoadingMessageId] = useState<string | null>(null)
   const [viewportHeight, setViewportHeight] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [completedMessages, setCompletedMessages] = useState<Set<string>>(new Set())
-  const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
+
   const inputContainerRef = useRef<HTMLDivElement>(null)
   const shouldFocusAfterStreamingRef = useRef(false)
   const mainContainerRef = useRef<HTMLDivElement>(null)
-  // Store selection state
   const selectionStateRef = useRef<{ start: number | null; end: number | null }>({
     start: null,
     end: null
   })
 
-  // Constants for layout calculations to account for the padding values
-  const HEADER_HEIGHT = 48 // 12px height + padding
-  const INPUT_AREA_HEIGHT = 100 // Approximate height of input area with padding
-  const TOP_PADDING = 48 // pt-12 (3rem = 48px)
-  const BOTTOM_PADDING = 128 // pb-32 (8rem = 128px)
-  const ADDITIONAL_OFFSET = 16 // Reduced offset for fine-tuning
-
-  // Check if device is mobile and get viewport height
   useEffect(() => {
     const checkMobileAndViewport = () => {
       const isMobileDevice = window.innerWidth < 768
@@ -65,7 +52,6 @@ export default function ChatInterface() {
       mainContainerRef.current.style.height = isMobile ? `${viewportHeight}px` : '100svh'
     }
 
-    // Update on resize
     window.addEventListener('resize', checkMobileAndViewport)
 
     return () => {
@@ -73,77 +59,6 @@ export default function ChatInterface() {
     }
   }, [isMobile, viewportHeight])
 
-  // Organize messages into sections
-  useEffect(() => {
-    if (messages.length === 0) {
-      setMessageSections([])
-      setActiveSectionId(null)
-      return
-    }
-
-    const sections: MessageSection[] = []
-    let currentSection: MessageSection = {
-      id: `section-${Date.now()}-0`,
-      messages: [],
-      isNewSection: false,
-      sectionIndex: 0
-    }
-
-    messages.forEach((message) => {
-      if (message.newSection) {
-        // Start a new section
-        if (currentSection.messages.length > 0) {
-          // Mark previous section as inactive
-          sections.push({
-            ...currentSection,
-            isActive: false
-          })
-        }
-
-        // Create new active section
-        const newSectionId = `section-${Date.now()}-${sections.length}`
-        currentSection = {
-          id: newSectionId,
-          messages: [message],
-          isNewSection: true,
-          isActive: true,
-          sectionIndex: sections.length
-        }
-
-        // Update active section ID
-        setActiveSectionId(newSectionId)
-      } else {
-        // Add to current section
-        currentSection.messages.push(message)
-      }
-    })
-
-    // Add the last section if it has messages
-    if (currentSection.messages.length > 0) {
-      sections.push(currentSection)
-    }
-
-    setMessageSections(sections)
-  }, [messages])
-
-  // Scroll to maximum position when new section is created, but only for sections after the first
-  useEffect(() => {
-    if (messageSections.length > 1) {
-      setTimeout(() => {
-        const scrollContainer = chatContainerRef.current
-
-        if (scrollContainer) {
-          // Scroll to maximum possible position
-          scrollContainer.scrollTo({
-            top: scrollContainer.scrollHeight,
-            behavior: 'smooth'
-          })
-        }
-      }, 100)
-    }
-  }, [messageSections])
-
-  // Focus the textarea on component mount (only on desktop)
   useEffect(() => {
     if (textareaRef.current && !isMobile) {
       textareaRef.current.focus()
@@ -158,11 +73,15 @@ export default function ChatInterface() {
     }
   }, [isLoading, isMobile])
 
-  // Calculate available content height (viewport minus header and input)
-  const getContentHeight = () => {
-    // Calculate available height by subtracting the top and bottom padding from viewport height
-    return viewportHeight - TOP_PADDING - BOTTOM_PADDING - ADDITIONAL_OFFSET
-  }
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    if (messages.length > 0 && chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }, [messages])
 
   // Save the current selection state
   const saveSelectionState = () => {
@@ -212,53 +131,6 @@ export default function ChatInterface() {
     return responses[Math.floor(Math.random() * responses.length)]
   }
 
-  const simulateAIResponse = async (userMessage: string) => {
-    const response = getAIResponse(userMessage)
-
-    // Create a new message with loading state
-    const messageId = Date.now().toString()
-    setLoadingMessageId(messageId)
-    setIsLoading(true)
-
-    setMessages((prev: Message[]) => [
-      ...prev,
-      {
-        id: messageId,
-        content: '',
-        type: 'system',
-        isLoading: true
-      }
-    ])
-
-    // Add a delay before the second vibration
-    setTimeout(() => {
-      // Add vibration when loading begins
-      navigator.vibrate(50)
-    }, 200)
-
-    // Simulate loading time
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Update with complete message
-    setMessages((prev: Message[]) =>
-      prev.map((msg) =>
-        msg.id === messageId
-          ? { ...msg, content: response, completed: true, isLoading: false }
-          : msg
-      )
-    )
-
-    // Add to completed messages set
-    setCompletedMessages((prev) => new Set(prev).add(messageId))
-
-    // Add vibration when loading ends
-    navigator.vibrate(50)
-
-    // Reset loading state
-    setLoadingMessageId(null)
-    setIsLoading(false)
-  }
-
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
 
@@ -285,20 +157,10 @@ export default function ChatInterface() {
     if (isNewChat) setNewChat(false)
     e.preventDefault()
     if (inputValue.trim() && !isLoading) {
-      // Add vibration when message is submitted
-      navigator.vibrate(50)
-
       const userMessage = inputValue.trim()
 
-      // Add as a new section if messages already exist
-      const shouldAddNewSection = messages.length > 0
-
-      const newUserMessage = {
-        id: `user-${Date.now()}`,
-        content: userMessage,
-        type: 'user' as MessageType,
-        newSection: shouldAddNewSection
-      }
+      const userMessageId = `user-${Date.now()}`
+      const systemMessageId = `system-${Date.now()}`
 
       // Reset input before starting the AI response
       setInputValue('')
@@ -309,21 +171,54 @@ export default function ChatInterface() {
         textareaRef.current.style.height = 'auto'
       }
 
-      // Add the message after resetting input
-      setMessages((prev) => [...prev, newUserMessage])
+      // Add the user message
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: userMessageId,
+          content: userMessage,
+          type: 'user' as MessageType
+        }
+      ])
+
+      // Set loading state
+      setIsLoading(true)
+
+      // Add the system message with loading state
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: systemMessageId,
+          content: '',
+          type: 'system' as MessageType,
+          isLoading: true
+        }
+      ])
+
+      // Simulate AI response after a delay
+      setTimeout(() => {
+        const aiResponse = getAIResponse(userMessage)
+
+        // Update the system message with content
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === systemMessageId
+              ? { ...msg, content: aiResponse, isLoading: false, completed: true }
+              : msg
+          )
+        )
+
+        setIsLoading(false)
+      }, 1500)
 
       // Only focus the textarea on desktop, not on mobile
       if (!isMobile) {
         focusTextarea()
       } else {
-        // On mobile, blur the textarea to dismiss the keyboard
         if (textareaRef.current) {
           textareaRef.current.blur()
         }
       }
-
-      // Start AI response
-      simulateAIResponse(userMessage)
     }
   }
 
@@ -356,10 +251,6 @@ export default function ChatInterface() {
     }
   }
 
-  const shouldApplyHeight = (sectionIndex: number) => {
-    return sectionIndex > 0
-  }
-
   return (
     <WavyBackground
       ref={mainContainerRef}
@@ -388,59 +279,9 @@ export default function ChatInterface() {
       </header>
 
       <div ref={chatContainerRef} className="flex-grow overflow-y-auto px-4 pt-12 pb-32">
-        {/* <div className="mx-auto max-w-3xl space-y-4">
-          {messageSections.map((section, sectionIndex) => (
-            <div
-              key={section.id}
-              ref={
-                sectionIndex === messageSections.length - 1 && section.isNewSection
-                  ? newSectionRef
-                  : null
-              }
-            >
-              {section.isNewSection && (
-                <div
-                  style={
-                    section.isActive && shouldApplyHeight(section.sectionIndex)
-                      ? { height: `${getContentHeight()}px` }
-                      : {}
-                  }
-                  className={cn(
-                    'flex flex-col pt-4',
-                    isNewChat && isLoading ? 'items-center' : 'justify-start'
-                  )}
-                >
-                  {section.messages.map((message) =>
-                    renderMessage(message, loadingMessageId, completedMessages)
-                  )}
-                </div>
-              )}
-              {!section.isNewSection && (
-                <div>
-                  {section.messages.map((message) =>
-                    renderMessage(message, loadingMessageId, completedMessages)
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div> */}
-        <div className="w-full max-w-3xl">
-          {chatData.map((message) => {
-            const [isLoading, setIsLoading] = useState(false)
-
-            // Trigger loading state when message is system type
-            useEffect(() => {
-              if (message.type === 'system') {
-                setIsLoading(true)
-                const timer = setTimeout(() => {
-                  setIsLoading(false) // Stop loading after 1 second
-                }, 1000)
-                return () => clearTimeout(timer) // Clean up timer on component unmount
-              }
-            }, [message.id])
-
+        <div className="flex w-3xl max-w-3xl flex-col">
+          {messages.map((message, index) => {
+            const isLastMessage = index === messages.length - 1
             return (
               <div
                 key={message.id}
@@ -457,17 +298,19 @@ export default function ChatInterface() {
                       : 'bg-white text-gray-900'
                   )}
                 >
-                  {/* Display message content */}
                   {message.content && (
                     <span
-                      className={message.type === 'system' && isLoading ? 'animate-fade-in' : ''}
+                      className={
+                        message.type === 'system' && isLoading && isLastMessage
+                          ? 'animate-fade-in'
+                          : ''
+                      }
                     >
                       {message.content}
                     </span>
                   )}
 
-                  {/* Loading animation for system messages */}
-                  {isLoading && (
+                  {message.isLoading && message.type === 'system' && isLastMessage && (
                     <div className="flex items-center space-x-2">
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
@@ -477,7 +320,7 @@ export default function ChatInterface() {
                 </div>
 
                 {/* Action buttons for system messages */}
-                {message.type === 'system' && !isLoading && (
+                {message.type === 'system' && !message.isLoading && (
                   <div className="mt-1 mb-2 flex items-center gap-2 px-4">
                     <button className="hover:text-gray- cursor-pointer text-gray-400 transition-colors">
                       <RefreshCcw className="h-4 w-4" />
@@ -490,6 +333,7 @@ export default function ChatInterface() {
               </div>
             )
           })}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 

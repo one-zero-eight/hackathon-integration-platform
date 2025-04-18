@@ -21,3 +21,10 @@ export interface StreamingWord {
   id: number
   text: string
 }
+
+export interface Messages {
+  id: string // Unique identifier for each message
+  type: MessageType
+  content: string // The content of the message (text)
+  isLoading?: boolean
+}
