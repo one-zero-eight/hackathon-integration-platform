@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { responses } from '@/lib/constants'
 import { ActiveButton, Message, MessageSection, MessageType, StreamingWord } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
-import { ArrowUp, Lightbulb, Menu, PenSquare, Plus, Search } from 'lucide-react'
+import { ArrowUp, Menu, PenSquare, Plus } from 'lucide-react'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { renderMessage } from './ui/renderMessage'
@@ -499,18 +499,16 @@ export default function ChatInterface() {
                     variant="outline"
                     size="icon"
                     className={cn(
-                      'h-8 w-8 flex-shrink-0 rounded-full border-[#E30611] bg-gray-100 p-0 transition-colors',
-                      activeButton === 'add' && 'bg-[#E30611]'
+                      'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
+                      activeButton === 'add'
+                        ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
+                        : 'border-gray-300 bg-gray-100 text-gray-400',
+                      isStreaming && 'cursor-not-allowed opacity-50'
                     )}
                     onClick={() => toggleButton('add')}
                     disabled={isStreaming}
                   >
-                    <Plus
-                      className={cn(
-                        'h-4 w-4 text-[#E30611]',
-                        activeButton === 'add' && 'text-white'
-                      )}
-                    />
+                    <Plus className={cn('h-4 w-4 transition-colors')} />
                     <span className="sr-only">Add</span>
                   </Button>
                 </div>
@@ -520,17 +518,15 @@ export default function ChatInterface() {
                   variant="outline"
                   size="icon"
                   className={cn(
-                    'h-8 w-8 flex-shrink-0 rounded-full border border-[#E30611] transition-all duration-200',
-                    hasTyped ? 'scale-110 bg-[#E30611]' : 'bg-gray-[#eaeaea]'
+                    'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
+                    hasTyped
+                      ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
+                      : 'border-gray-300 bg-gray-100 text-gray-400',
+                    isStreaming && 'cursor-not-allowed opacity-50'
                   )}
                   disabled={!inputValue.trim() || isStreaming}
                 >
-                  <ArrowUp
-                    className={cn(
-                      'h-4 w-4 transition-colors',
-                      hasTyped ? 'text-white' : 'text-[#E30611]'
-                    )}
-                  />
+                  <ArrowUp className={cn('h-4 w-4 transition-colors')} />
                   <span className="sr-only">Submit</span>
                 </Button>
               </div>
