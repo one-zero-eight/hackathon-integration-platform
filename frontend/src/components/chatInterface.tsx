@@ -469,7 +469,7 @@ export default function ChatInterface() {
           <div
             ref={inputContainerRef}
             className={cn(
-              'relative w-full cursor-text rounded-3xl border border-gray-200 bg-white p-3',
+              'relative w-full cursor-text rounded-3xl border border-[#8A8D8F] bg-[#EFEFEF] p-3',
               isStreaming && 'opacity-80'
             )}
             onClick={handleInputContainerClick}
@@ -499,16 +499,16 @@ export default function ChatInterface() {
                     variant="outline"
                     size="icon"
                     className={cn(
-                      'h-8 w-8 flex-shrink-0 rounded-full border-gray-200 p-0 transition-colors',
-                      activeButton === 'add' && 'border-gray-300 bg-gray-100'
+                      'h-8 w-8 flex-shrink-0 rounded-full border-[#E30611] bg-gray-100 p-0 transition-colors',
+                      activeButton === 'add' && 'bg-[#E30611]'
                     )}
                     onClick={() => toggleButton('add')}
                     disabled={isStreaming}
                   >
                     <Plus
                       className={cn(
-                        'h-4 w-4 text-gray-500',
-                        activeButton === 'add' && 'text-gray-700'
+                        'h-4 w-4 text-[#E30611]',
+                        activeButton === 'add' && 'text-white'
                       )}
                     />
                     <span className="sr-only">Add</span>
@@ -520,15 +520,15 @@ export default function ChatInterface() {
                   variant="outline"
                   size="icon"
                   className={cn(
-                    'h-8 w-8 flex-shrink-0 rounded-full border-0 transition-all duration-200',
-                    hasTyped ? 'scale-110 bg-black' : 'bg-gray-200'
+                    'h-8 w-8 flex-shrink-0 rounded-full border border-[#E30611] transition-all duration-200',
+                    hasTyped ? 'scale-110 bg-[#E30611]' : 'bg-gray-[#eaeaea]'
                   )}
                   disabled={!inputValue.trim() || isStreaming}
                 >
                   <ArrowUp
                     className={cn(
                       'h-4 w-4 transition-colors',
-                      hasTyped ? 'text-white' : 'text-gray-500'
+                      hasTyped ? 'text-white' : 'text-[#E30611]'
                     )}
                   />
                   <span className="sr-only">Submit</span>
