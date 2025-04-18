@@ -2,3 +2,4 @@ $schema: "./settings.schema.yaml"
 api_settings:
   db_url: null
   session_secret_key: null
+  mws_gpt_api_key: null

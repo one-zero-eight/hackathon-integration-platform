@@ -20,9 +20,14 @@ $defs:
         example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         title: Api Key
         type: string
+      mws_gpt_api_key:
+        example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        title: MWS API KEY
+        type: string
     required:
     - db_url
     - session_secret_key
+    - mws_gpt_api_key
     title: ApiSettings
     type: object
 properties:

@@ -71,6 +71,27 @@ def check_and_generate_session_secret_key():
         print("✅ `session_secret_key` is specified.")
 
 
+def check_mws_gpt_api_key():
+    settings = get_settings()
+    mws_gpt_api_key = settings.get("api_settings", {}).get("mws_gpt_api_key")
+    if not mws_gpt_api_key or mws_gpt_api_key == "...":
+        print("⚠️ `mws_gpt_api_key` is missing in `settings.yaml`.")
+        api_key = input("➡️ input MWS API KEY: ")
+
+        try:
+            with open(SETTINGS_FILE) as f:
+                as_text = f.read()
+            as_text = as_text.replace("mws_gpt_api_key: null", f"mws_gpt_api_key: {api_key}")
+            as_text = as_text.replace("mws_gpt_api_key: ...", f"mws_gpt_api_key: {api_key}")
+            with open(SETTINGS_FILE, "w") as f:
+                f.write(as_text)
+            print("  ✅ `mws_gpt_api_key` has been updated in `settings.yaml`.")
+        except Exception as e:
+            print(f"  ❌ Error updating `settings.yaml`: {e}")
+    else:
+        print("✅ `mws_gpt_api_key` is specified.")
+
+
 def ensure_pre_commit_hooks():
     """
     Ensure `pre-commit` hooks are installed.
@@ -189,5 +210,6 @@ def check_database_access():
 def prepare():
     ensure_settings_file()
     check_and_generate_session_secret_key()
+    check_mws_gpt_api_key()
     ensure_pre_commit_hooks()
     check_database_access()
