@@ -269,7 +269,7 @@ export default function ChatInterface() {
             <span className="sr-only">Menu</span>
           </Button>
 
-          <h1 className="text-base font-medium text-gray-800">v0 Chat</h1>
+          <h1 className="text-base font-medium text-gray-800">JSON Generator</h1>
 
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
             <PenSquare className="h-5 w-5 text-gray-700" />
@@ -322,10 +322,10 @@ export default function ChatInterface() {
                 {/* Action buttons for system messages */}
                 {message.type === 'system' && !message.isLoading && (
                   <div className="mt-1 mb-2 flex items-center gap-2 px-4">
-                    <button className="hover:text-gray- cursor-pointer text-gray-400 transition-colors">
+                    <button className="hover:text-gray- cursor-pointer text-black transition-colors">
                       <RefreshCcw className="h-4 w-4" />
                     </button>
-                    <button className="hover:text-gray- cursor-pointer text-gray-400 transition-colors">
+                    <button className="hover:text-gray- cursor-pointer text-black transition-colors">
                       <Copy className="h-4 w-4" />
                     </button>
                   </div>
@@ -380,7 +380,7 @@ export default function ChatInterface() {
                       'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
                       activeButton === 'add'
                         ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
-                        : 'border-gray-300 bg-gray-100 text-gray-400',
+                        : 'border-gray-400 bg-gray-100',
                       isLoading && 'cursor-not-allowed opacity-50'
                     )}
                     onClick={() => toggleButton('add')}
@@ -399,8 +399,8 @@ export default function ChatInterface() {
                     'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
                     hasTyped
                       ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
-                      : 'border-gray-300 bg-gray-100 text-gray-400',
-                    isLoading && 'cursor-not-allowed opacity-50'
+                      : 'border-black bg-gray-100 text-black',
+                    isLoading && 'cursor-not-allowed'
                   )}
                   disabled={!inputValue.trim() || isLoading}
                 >
