@@ -1,17 +1,13 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { responses } from '@/lib/constants'
-import { ActiveButton, Message, MessageSection, MessageType, StreamingWord } from '@/lib/interfaces'
+import { chatData, responses } from '@/lib/constants'
+import { ActiveButton, Message, MessageSection, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
-import { ArrowUp, Menu, PenSquare, Plus } from 'lucide-react'
+import { ArrowUp, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { renderMessage } from './ui/renderMessage'
 import { WavyBackground } from './ui/wavy-background'
-
-const WORD_DELAY = 40 // ms per word
-const CHUNK_SIZE = 2 // Number of words to add at once
 
 export default function ChatInterface() {
   const [isNewChat, setNewChat] = useState<boolean>(true)
@@ -24,9 +20,8 @@ export default function ChatInterface() {
   const [isMobile, setIsMobile] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [messageSections, setMessageSections] = useState<MessageSection[]>([])
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [streamingWords, setStreamingWords] = useState<StreamingWord[]>([])
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingMessageId, setLoadingMessageId] = useState<string | null>(null)
   const [viewportHeight, setViewportHeight] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [completedMessages, setCompletedMessages] = useState<Set<string>>(new Set())
@@ -157,11 +152,11 @@ export default function ChatInterface() {
 
   // Set focus back to textarea after streaming ends (only on desktop)
   useEffect(() => {
-    if (!isStreaming && shouldFocusAfterStreamingRef.current && !isMobile) {
+    if (!isLoading && shouldFocusAfterStreamingRef.current && !isMobile) {
       focusTextarea()
       shouldFocusAfterStreamingRef.current = false
     }
-  }, [isStreaming, isMobile])
+  }, [isLoading, isMobile])
 
   // Calculate available content height (viewport minus header and input)
   const getContentHeight = () => {
@@ -213,37 +208,6 @@ export default function ChatInterface() {
     }
   }
 
-  const simulateTextStreaming = async (text: string) => {
-    // Split text into words
-    const words = text.split(' ')
-    let currentIndex = 0
-    setStreamingWords([])
-    setIsStreaming(true)
-
-    return new Promise<void>((resolve) => {
-      const streamInterval = setInterval(() => {
-        if (currentIndex < words.length) {
-          // Add a few words at a time
-          const nextIndex = Math.min(currentIndex + CHUNK_SIZE, words.length)
-          const newWords = words.slice(currentIndex, nextIndex)
-
-          setStreamingWords((prev) => [
-            ...prev,
-            {
-              id: Date.now() + currentIndex,
-              text: newWords.join(' ') + ' '
-            }
-          ])
-
-          currentIndex = nextIndex
-        } else {
-          clearInterval(streamInterval)
-          resolve()
-        }
-      }, WORD_DELAY)
-    })
-  }
-
   const getAIResponse = (userMessage: string) => {
     return responses[Math.floor(Math.random() * responses.length)]
   }
@@ -251,52 +215,55 @@ export default function ChatInterface() {
   const simulateAIResponse = async (userMessage: string) => {
     const response = getAIResponse(userMessage)
 
-    // Create a new message with empty content
+    // Create a new message with loading state
     const messageId = Date.now().toString()
-    setStreamingMessageId(messageId)
+    setLoadingMessageId(messageId)
+    setIsLoading(true)
 
-    setMessages((prev) => [
+    setMessages((prev: Message[]) => [
       ...prev,
       {
         id: messageId,
         content: '',
-        type: 'system'
+        type: 'system',
+        isLoading: true
       }
     ])
 
     // Add a delay before the second vibration
     setTimeout(() => {
-      // Add vibration when streaming begins
+      // Add vibration when loading begins
       navigator.vibrate(50)
-    }, 200) // 200ms delay to make it distinct from the first vibration
+    }, 200)
 
-    // Stream the text
-    await simulateTextStreaming(response)
+    // Simulate loading time
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Update with complete message
-    setMessages((prev) =>
+    setMessages((prev: Message[]) =>
       prev.map((msg) =>
-        msg.id === messageId ? { ...msg, content: response, completed: true } : msg
+        msg.id === messageId
+          ? { ...msg, content: response, completed: true, isLoading: false }
+          : msg
       )
     )
 
-    // Add to completed messages set to prevent re-animation
+    // Add to completed messages set
     setCompletedMessages((prev) => new Set(prev).add(messageId))
 
-    // Add vibration when streaming ends
+    // Add vibration when loading ends
     navigator.vibrate(50)
 
-    // Reset streaming state
-    setStreamingWords([])
-    setStreamingMessageId(null)
-    setIsStreaming(false)
+    // Reset loading state
+    setLoadingMessageId(null)
+    setIsLoading(false)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
 
     // Only allow input changes when not streaming
-    if (!isStreaming) {
+    if (!isLoading) {
       setInputValue(newValue)
 
       if (newValue.trim() !== '' && !hasTyped) {
@@ -317,7 +284,7 @@ export default function ChatInterface() {
   const handleSubmit = (e: React.FormEvent) => {
     if (isNewChat) setNewChat(false)
     e.preventDefault()
-    if (inputValue.trim() && !isStreaming) {
+    if (inputValue.trim() && !isLoading) {
       // Add vibration when message is submitted
       navigator.vibrate(50)
 
@@ -362,21 +329,21 @@ export default function ChatInterface() {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Handle Cmd+Enter on both mobile and desktop
-    if (!isStreaming && e.key === 'Enter' && e.metaKey) {
+    if (!isLoading && e.key === 'Enter' && e.metaKey) {
       e.preventDefault()
       handleSubmit(e)
       return
     }
 
     // Only handle regular Enter key (without Shift) on desktop
-    if (!isStreaming && !isMobile && e.key === 'Enter' && !e.shiftKey) {
+    if (!isLoading && !isMobile && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSubmit(e)
     }
   }
 
   const toggleButton = (button: ActiveButton) => {
-    if (!isStreaming) {
+    if (!isLoading) {
       // Save the current selection state before toggling
       saveSelectionState()
 
@@ -421,7 +388,7 @@ export default function ChatInterface() {
       </header>
 
       <div ref={chatContainerRef} className="flex-grow overflow-y-auto px-4 pt-12 pb-32">
-        <div className="mx-auto max-w-3xl space-y-4">
+        {/* <div className="mx-auto max-w-3xl space-y-4">
           {messageSections.map((section, sectionIndex) => (
             <div
               key={section.id}
@@ -438,24 +405,91 @@ export default function ChatInterface() {
                       ? { height: `${getContentHeight()}px` }
                       : {}
                   }
-                  className="flex flex-col justify-start pt-4"
+                  className={cn(
+                    'flex flex-col pt-4',
+                    isNewChat && isLoading ? 'items-center' : 'justify-start'
+                  )}
                 >
                   {section.messages.map((message) =>
-                    renderMessage(message, streamingWords, streamingMessageId, completedMessages)
+                    renderMessage(message, loadingMessageId, completedMessages)
                   )}
                 </div>
               )}
-
               {!section.isNewSection && (
                 <div>
                   {section.messages.map((message) =>
-                    renderMessage(message, streamingWords, streamingMessageId, completedMessages)
+                    renderMessage(message, loadingMessageId, completedMessages)
                   )}
                 </div>
               )}
             </div>
           ))}
           <div ref={messagesEndRef} />
+        </div> */}
+        <div className="w-full max-w-3xl">
+          {chatData.map((message) => {
+            const [isLoading, setIsLoading] = useState(false)
+
+            // Trigger loading state when message is system type
+            useEffect(() => {
+              if (message.type === 'system') {
+                setIsLoading(true)
+                const timer = setTimeout(() => {
+                  setIsLoading(false) // Stop loading after 1 second
+                }, 1000)
+                return () => clearTimeout(timer) // Clean up timer on component unmount
+              }
+            }, [message.id])
+
+            return (
+              <div
+                key={message.id}
+                className={cn(
+                  'flex w-[100%] flex-col',
+                  message.type === 'user' ? 'items-end' : 'items-start'
+                )}
+              >
+                <div
+                  className={cn(
+                    'max-w-[80%] rounded-2xl px-4 py-2',
+                    message.type === 'user'
+                      ? 'rounded-br-none border border-gray-200 bg-red-100'
+                      : 'bg-white text-gray-900'
+                  )}
+                >
+                  {/* Display message content */}
+                  {message.content && (
+                    <span
+                      className={message.type === 'system' && isLoading ? 'animate-fade-in' : ''}
+                    >
+                      {message.content}
+                    </span>
+                  )}
+
+                  {/* Loading animation for system messages */}
+                  {isLoading && (
+                    <div className="flex items-center space-x-2">
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Action buttons for system messages */}
+                {message.type === 'system' && !isLoading && (
+                  <div className="mt-1 mb-2 flex items-center gap-2 px-4">
+                    <button className="hover:text-gray- cursor-pointer text-gray-400 transition-colors">
+                      <RefreshCcw className="h-4 w-4" />
+                    </button>
+                    <button className="hover:text-gray- cursor-pointer text-gray-400 transition-colors">
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -470,14 +504,14 @@ export default function ChatInterface() {
             ref={inputContainerRef}
             className={cn(
               'relative w-full cursor-text rounded-3xl border border-[#8A8D8F] bg-[#EFEFEF] p-3',
-              isStreaming && 'opacity-80'
+              isLoading && 'opacity-80'
             )}
             onClick={handleInputContainerClick}
           >
             <div className="pb-9">
               <Textarea
                 ref={textareaRef}
-                placeholder={isStreaming ? 'Waiting for response...' : 'Ask Anything'}
+                placeholder={isLoading ? 'Waiting for response...' : 'Ask Anything'}
                 className="max-h-[160px] min-h-[24px] w-full resize-none overflow-y-auto rounded-3xl border-0 bg-transparent pt-0 pr-4 pb-0 pl-2 text-base leading-tight text-gray-900 placeholder:text-base placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                 value={inputValue}
                 onChange={handleInputChange}
@@ -503,10 +537,10 @@ export default function ChatInterface() {
                       activeButton === 'add'
                         ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
                         : 'border-gray-300 bg-gray-100 text-gray-400',
-                      isStreaming && 'cursor-not-allowed opacity-50'
+                      isLoading && 'cursor-not-allowed opacity-50'
                     )}
                     onClick={() => toggleButton('add')}
-                    disabled={isStreaming}
+                    disabled={isLoading}
                   >
                     <Plus className={cn('h-4 w-4 transition-colors')} />
                     <span className="sr-only">Add</span>
@@ -522,9 +556,9 @@ export default function ChatInterface() {
                     hasTyped
                       ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
                       : 'border-gray-300 bg-gray-100 text-gray-400',
-                    isStreaming && 'cursor-not-allowed opacity-50'
+                    isLoading && 'cursor-not-allowed opacity-50'
                   )}
-                  disabled={!inputValue.trim() || isStreaming}
+                  disabled={!inputValue.trim() || isLoading}
                 >
                   <ArrowUp className={cn('h-4 w-4 transition-colors')} />
                   <span className="sr-only">Submit</span>
