@@ -1,28 +1,7 @@
 export type ActiveButton = 'none' | 'add' | 'deepSearch' | 'think'
 export type MessageType = 'user' | 'system'
 
-export interface Message {
-  id: string
-  content: string
-  type: MessageType
-  completed?: boolean
-  newSection?: boolean
-}
-
-export interface MessageSection {
-  id: string
-  messages: Message[]
-  isNewSection: boolean
-  isActive?: boolean
-  sectionIndex: number
-}
-
-export interface StreamingWord {
-  id: number
-  text: string
-}
-
-export interface Messages {
+export interface MessagesMock {
   id: string // Unique identifier for each message
   type: MessageType
   content: string // The content of the message (text)
