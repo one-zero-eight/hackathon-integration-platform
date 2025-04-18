@@ -278,7 +278,7 @@ export default function ChatInterface() {
         </div>
       </header>
 
-      <div ref={chatContainerRef} className="flex-grow overflow-y-auto px-4 pt-12 pb-32">
+      <div ref={chatContainerRef} className="flex-grow overflow-y-auto px-4 pt-12 pb-32 scrollbar-none">
         <div className="flex w-3xl max-w-3xl flex-col">
           {messages.map((message, index) => {
             const isLastMessage = index === messages.length - 1
