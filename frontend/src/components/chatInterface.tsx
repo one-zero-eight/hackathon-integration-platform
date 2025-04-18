@@ -264,21 +264,24 @@ export default function ChatInterface() {
     >
       <header className="fixed top-0 right-0 left-0 z-20 flex h-12 items-center bg-white px-4">
         <div className="flex w-full items-center justify-between px-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-            <Menu className="h-5 w-5 text-gray-700" />
+          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full">
+            <Menu className="h-12 w-12 text-black" />
             <span className="sr-only">Menu</span>
           </Button>
 
           <h1 className="text-base font-medium text-gray-800">JSON Generator</h1>
 
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-            <PenSquare className="h-5 w-5 text-gray-700" />
+          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full">
+            <PenSquare className="h-40 w-40 text-black" />
             <span className="sr-only">New Chat</span>
           </Button>
         </div>
       </header>
 
-      <div ref={chatContainerRef} className="flex-grow overflow-y-auto px-4 pt-12 pb-32 scrollbar-none">
+      <div
+        ref={chatContainerRef}
+        className="scrollbar-none flex-grow overflow-y-auto px-4 pt-12 pb-32"
+      >
         <div className="flex w-3xl max-w-3xl flex-col">
           {messages.map((message, index) => {
             const isLastMessage = index === messages.length - 1
