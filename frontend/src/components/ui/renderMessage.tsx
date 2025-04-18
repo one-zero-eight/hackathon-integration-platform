@@ -1,19 +1,22 @@
-import { Message, StreamingWord } from '@/lib/interfaces'
+import { Message } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
-import { Copy, RefreshCcw, Share2, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { Copy, RefreshCcw } from 'lucide-react'
 
 export const renderMessage = (
   message: Message,
-  streamingWords: StreamingWord[],
-  streamingMessageId: string | null,
+  loadingMessageId: string | null,
   completedMessages: Set<string>
 ) => {
   const isCompleted = completedMessages.has(message.id)
+  const isLoading = message.id === loadingMessageId
 
   return (
     <div
       key={message.id}
-      className={cn('flex flex-col', message.type === 'user' ? 'items-end' : 'items-start')}
+      className={cn(
+        'flex w-[100%] flex-col',
+        message.type === 'user' ? 'items-end' : 'items-start'
+      )}
     >
       <div
         className={cn(
@@ -25,20 +28,22 @@ export const renderMessage = (
       >
         {/* For user messages or completed system messages, render without animation */}
         {message.content && (
-          <span className={message.type === 'system' && !isCompleted ? 'animate-fade-in' : ''}>
+          <span
+            className={
+              message.type === 'system' && !isCompleted && !isLoading ? 'animate-fade-in' : ''
+            }
+          >
             {message.content}
           </span>
         )}
 
-        {/* For streaming messages, render with animation */}
-        {message.id === streamingMessageId && (
-          <span className="inline">
-            {streamingWords.map((word) => (
-              <span key={word.id} className="animate-fade-in inline">
-                {word.text}
-              </span>
-            ))}
-          </span>
+        {/* Show loading animation for system messages */}
+        {isLoading && (
+          <div className="flex items-center space-x-2">
+            <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]"></div>
+            <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]"></div>
+            <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400"></div>
+          </div>
         )}
       </div>
 
@@ -50,15 +55,6 @@ export const renderMessage = (
           </button>
           <button className="hover:text-gray- cursor-pointer text-gray-400 transition-colors">
             <Copy className="h-4 w-4" />
-          </button>
-          <button className="hover:text-gray- cursor-pointer text-gray-400 transition-colors">
-            <Share2 className="h-4 w-4" />
-          </button>
-          <button className="hover:text-gray- cursor-pointer text-gray-400 transition-colors">
-            <ThumbsUp className="h-4 w-4" />
-          </button>
-          <button className="hover:text-gray- cursor-pointer text-gray-400 transition-colors">
-            <ThumbsDown className="h-4 w-4" />
           </button>
         </div>
       )}
