@@ -1,5 +1,5 @@
 export type ActiveButton = 'none' | 'add' | 'deepSearch' | 'think'
-export type MessageType = 'user' | 'system'
+export type MessageType = 'user' | 'system' | 'assistant'
 
 export interface Message {
   id: string
@@ -27,4 +27,10 @@ export interface Messages {
   type: MessageType
   content: string // The content of the message (text)
   isLoading?: boolean
+}
+
+export interface MessageData {
+  dialogId: string
+  type: MessageType
+  comment: string
 }
