@@ -66,8 +66,5 @@ def check_and_generate_session_secret_key():
 
 
 def prepare():
-    """
-    Prepare the project for the first run.
-    """
     ensure_settings_file()
     check_and_generate_session_secret_key()

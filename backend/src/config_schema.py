@@ -16,7 +16,7 @@ class Settings(SettingBaseModel):
     schema_: str = Field(None, alias="$schema")
     app_root_path: str = ""
     'Prefix for the API path (e.g. "/api/v0")'
-    database_uri: SecretStr = "sqlite:///data/db.sqlite"
+    database_uri: SecretStr = "sqlite+aiosqlite:///data/db.sqlite"
     "SQLite database settings"
     cors_allow_origin_regex: str = ".*"
     "Allowed origins for CORS: from which domains requests to the API are allowed. Specify as a regex: `https://.*.innohassle.ru`"

@@ -1,10 +1,12 @@
 import os
 import sys
 
+import dotenv
+
 from src.prepare import BASE_DIR, prepare
 
 os.chdir(BASE_DIR)
-
+dotenv.load_dotenv()
 prepare()
 
 import uvicorn  # noqa: E402
@@ -12,7 +14,7 @@ import uvicorn  # noqa: E402
 # Get arguments from command
 args = sys.argv[1:]
 extended_args = [
-    "src.app:app",
+    "src.api.app:app",
     "--use-colors",
     "--proxy-headers",
     "--forwarded-allow-ips=*",
