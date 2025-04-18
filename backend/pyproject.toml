@@ -13,6 +13,7 @@ dependencies = [
     "fastapi>=0.115.12",
     "fastapi-derive-responses>=0.1.4",
     "fastapi-swagger>=0.2.16",
+    "gunicorn>=23.0.0",
     "httpx>=0.28.1",
     "itsdangerous>=2.2.0",
     "python-dotenv>=1.1.0",

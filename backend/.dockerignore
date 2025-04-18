@@ -3,6 +3,8 @@
 
 # Except code
 !/src/
+!/alembic/
+!/alembic.ini
 !/pyproject.toml
 !/uv.lock
 !logging.yaml

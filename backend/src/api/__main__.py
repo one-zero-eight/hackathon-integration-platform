@@ -1,12 +1,9 @@
 import os
 import sys
 
-import dotenv
-
 from src.prepare import BASE_DIR, prepare
 
 os.chdir(BASE_DIR)
-dotenv.load_dotenv()
 prepare()
 
 import uvicorn  # noqa: E402

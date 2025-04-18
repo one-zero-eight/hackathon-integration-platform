@@ -39,4 +39,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY --chown=uv:uv . /app
 
 EXPOSE 8000
-CMD ["gunicorn", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "1", "src.app:app", "--timeout", "300"]
+CMD [ "uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8001", "--proxy-headers", "--forwarded-allow-ips=*" ]
