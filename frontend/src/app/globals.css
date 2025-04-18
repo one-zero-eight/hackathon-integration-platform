@@ -45,7 +45,7 @@
 
 :root {
   --radius: 0.625rem;
-  --background: "#eaeaea";
+  --background: '#eaeaea';
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -76,7 +76,6 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-
 }
 
 .dark {
@@ -111,8 +110,8 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --main-red: "#E30611";
-  --neutral-gray: "#ADAFAF";
+  --main-red: '#E30611';
+  --neutral-gray: '#ADAFAF';
 }
 
 @layer base {
@@ -129,12 +128,12 @@
 /* Font MTS Text Regular: Copyright (c) ParaType, 2022. All rights reserved.*/
 
 @font-face {
-	font-family: 'MTSTextRegular';
-	src: url('../../public/fonts/MTSText-Regular.eot');
-	src:
-	     url('../../public/fonts/MTSText-Regular.eot?#iefix') format('embedded-opentype'),
-	     url('../../public/fonts/MTSText-Regular.woff2') format('woff2'),
-	     url('../../public/fonts/MTSText-Regular.woff') format('woff');
-	font-weight: normal;
-	font-style: normal;
+  font-family: 'MTSTextRegular';
+  src: url('../../public/fonts/MTSText-Regular.eot');
+  src:
+    url('../../public/fonts/MTSText-Regular.eot?#iefix') format('embedded-opentype'),
+    url('../../public/fonts/MTSText-Regular.woff2') format('woff2'),
+    url('../../public/fonts/MTSText-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
 }
