@@ -22,8 +22,9 @@ class MessageRepository:
         async with self._create_session() as session:
             query = insert(Message).values(**message.model_dump()).returning(Message)
             obj = await session.scalar(query)
+            message = ViewMessage.model_validate(obj)
             await session.commit()
-            return ViewMessage.model_validate(obj)
+            return message
 
     async def get_messages(self, dialog_id: int, amount: int) -> list[ViewMessage]:
         async with self._create_session() as session:
