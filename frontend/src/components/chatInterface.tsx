@@ -262,7 +262,7 @@ export default function ChatInterface() {
       colors={['rgba(227, 18, 6, 0.7)', '#eaeaea', 'rgba(227, 18, 6, 0.7)']}
       style={{ height: isMobile ? `${viewportHeight}px` : '100svh' }}
     >
-      <header className="fixed top-0 right-0 left-0 z-20 flex h-12 items-center bg-gray-50 px-4">
+      <header className="fixed top-0 right-0 left-0 z-20 flex h-12 items-center bg-white px-4">
         <div className="flex w-full items-center justify-between px-2">
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
             <Menu className="h-5 w-5 text-gray-700" />
