@@ -401,7 +401,7 @@ export default function ChatInterface() {
       waveOpacity={50}
       speed="slow"
       blur={10}
-      colors={['#ddb9b9', '#e31206']}
+      colors={['rgba(227, 18, 6, 0.7)', '#eaeaea', 'rgba(227, 18, 6, 0.7)']}
       style={{ height: isMobile ? `${viewportHeight}px` : '100svh' }}
     >
       <header className="fixed top-0 right-0 left-0 z-20 flex h-12 items-center bg-gray-50 px-4">
