@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils'
 import { ArrowUp, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import Markdown from './MarkDown'
+
+import ChatMarkdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
 
 export default function ChatInterface() {
@@ -196,6 +197,26 @@ export default function ChatInterface() {
         }
       ])
 
+      const exampleMarkdown = `
+# Welcome to My App
+
+Here's some example code:
+
+\`\`\`typescript
+interface User {
+  id: number
+  name: string
+  email: string
+}
+
+const getUser = async (id: number): Promise<User> => {
+  const response = await fetch(\`/api/users/\${id}\`)
+  return response.json()
+}
+\`\`\`
+
+And`
+
       // Simulate AI response after a delay
       setTimeout(() => {
         const aiResponse = getAIResponse(userMessage)
@@ -204,7 +225,7 @@ export default function ChatInterface() {
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === systemMessageId
-              ? { ...msg, content: aiResponse, isLoading: false, completed: true }
+              ? { ...msg, content: exampleMarkdown, isLoading: false, completed: true }
               : msg
           )
         )
@@ -310,7 +331,7 @@ export default function ChatInterface() {
                           : ''
                       }
                     >
-                      <Markdown text={message.content} />
+                      <ChatMarkdown content={message.content} />
                     </span>
                   )}
 
