@@ -2,11 +2,12 @@
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { responses } from '@/lib/constants'
-import { ActiveButton, Messages, MessageType } from '@/lib/interfaces'
+import { ActiveButton, MessagesMock as Messages, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
 import { ArrowUp, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
+import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
 
 export default function ChatInterface() {
@@ -309,7 +310,7 @@ export default function ChatInterface() {
                           : ''
                       }
                     >
-                      {message.content}
+                      <Markdown text={message.content} />
                     </span>
                   )}
 
