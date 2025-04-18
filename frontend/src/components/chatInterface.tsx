@@ -131,22 +131,6 @@ export default function ChatInterface() {
     setMessageSections(sections)
   }, [messages])
 
-  // Scroll to maximum position when new section is created, but only for sections after the first
-  useEffect(() => {
-    if (messageSections.length > 1) {
-      setTimeout(() => {
-        const scrollContainer = chatContainerRef.current
-
-        if (scrollContainer) {
-          // Scroll to maximum possible position
-          scrollContainer.scrollTo({
-            top: scrollContainer.scrollHeight,
-            behavior: 'smooth'
-          })
-        }
-      }, 100)
-    }
-  }, [messageSections])
 
   // Focus the textarea on component mount (only on desktop)
   useEffect(() => {
@@ -420,7 +404,7 @@ export default function ChatInterface() {
         </div>
       </header>
 
-      <div ref={chatContainerRef} className="flex-grow overflow-y-auto px-4 pt-12 pb-32">
+      <div ref={chatContainerRef} className="flex-grow overflow-y-auto px-4 pt-12 pb-32 scrollbar-none">
         <div className="mx-auto max-w-3xl space-y-4">
           {messageSections.map((section, sectionIndex) => (
             <div
