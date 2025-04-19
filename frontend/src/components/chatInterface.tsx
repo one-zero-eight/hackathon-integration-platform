@@ -2,14 +2,14 @@
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { responses } from '@/lib/constants'
+import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import { ActiveButton, MessageData, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
-import { ArrowUp, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
+import { ArrowUp, Check, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
-import { useSendMessage } from '@/lib/hooks/useSendMessage'
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState<MessageData[]>([])
@@ -23,6 +23,7 @@ export default function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false)
   const [viewportHeight, setViewportHeight] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
 
   const inputContainerRef = useRef<HTMLDivElement>(null)
   const shouldFocusAfterStreamingRef = useRef(false)
@@ -271,6 +272,16 @@ export default function ChatInterface() {
     }
   }
 
+  const handleCopy = async (content: string, messageId: string) => {
+    try {
+      await navigator.clipboard.writeText(content)
+      setCopiedMessageId(messageId)
+      setTimeout(() => setCopiedMessageId(null), 2000) // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy text: ', err)
+    }
+  }
+
   return (
     <WavyBackground
       ref={mainContainerRef}
@@ -329,7 +340,7 @@ export default function ChatInterface() {
                           : ''
                       }
                     >
-                      <Markdown text={message.content} />
+                      <Markdown content={message.content} />
                     </span>
                   )}
 
@@ -342,14 +353,23 @@ export default function ChatInterface() {
                   )}
                 </div>
 
-                {/* Action buttons for system messages */}
                 {message.role === 'system' && !message.isLoading && (
                   <div className="mt-1 mb-2 flex items-center gap-2 px-4">
                     <button className="hover:text-gray- cursor-pointer text-black transition-colors">
                       <RefreshCcw className="h-4 w-4" />
                     </button>
-                    <button className="hover:text-gray- cursor-pointer text-black transition-colors">
-                      <Copy className="h-4 w-4" />
+                    <button
+                      onClick={() => handleCopy(message.content, message.dialog_id)}
+                      className={cn(
+                        'hover:text-gray- cursor-pointer text-black transition-colors',
+                        copiedMessageId === message.dialog_id && 'animate-pulse text-green-500'
+                      )}
+                    >
+                      {copiedMessageId === message.dialog_id ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 )}
