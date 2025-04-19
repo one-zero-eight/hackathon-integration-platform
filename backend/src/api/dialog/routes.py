@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
-from schemas import ViewDialog
 from src.db.repositories import dialog_repository
+from src.schemas import ViewDialog
 
 router = APIRouter(tags=["dialog"])
 
