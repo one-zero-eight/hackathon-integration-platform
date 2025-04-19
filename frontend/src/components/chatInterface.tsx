@@ -382,6 +382,11 @@ export default function ChatInterface() {
           isNewChat && 'bottom-1/2'
         )}
       >
+        {isNewChat && (
+          <h1 className="mb-4 text-center text-4xl text-lg md:text-xl lg:text-3xl">
+            Hello how can i help you ?
+          </h1>
+        )}
         <form
           onSubmit={handleSubmit}
           className={cn(
