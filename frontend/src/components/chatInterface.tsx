@@ -88,6 +88,11 @@ export default function ChatInterface() {
     }
   }, [messages])
 
+  useEffect(() => {
+    if (inputValue === '') {
+      resetTextareaHeight()
+    }
+  }, [inputValue])
   // Save the current selection state
   const saveSelectionState = () => {
     if (textareaRef.current) {
@@ -151,12 +156,15 @@ export default function ChatInterface() {
         textarea.style.height = 'auto'
         const newHeight = Math.max(24, Math.min(textarea.scrollHeight, 160))
         textarea.style.height = `${newHeight}px`
+
+        textarea.style.overflowY = newHeight >= 160 ? 'auto' : 'hidden'
       }
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     if (isNewChat) setNewChat(false)
+
     e.preventDefault()
     if (inputValue.trim() && !isLoading) {
       const userMessage = inputValue.trim()
@@ -174,7 +182,10 @@ export default function ChatInterface() {
       ])
 
       // Сбрасываем ввод
+
       setInputValue('')
+      resetTextareaHeight() // Add this line
+
       setHasTyped(false)
       setActiveButton('none')
       const dialogID = 1
@@ -273,6 +284,12 @@ export default function ChatInterface() {
     setNewChat(true)
   }
 
+  const resetTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = '24px' // Your default height
+    }
+  }
   return (
     <WavyBackground
       ref={mainContainerRef}
@@ -309,7 +326,7 @@ export default function ChatInterface() {
         ref={chatContainerRef}
         className="scrollbar-none flex-grow overflow-y-auto px-4 pt-12 pb-32"
       >
-        <div className="mx-auto flex w-[90vw] flex-col md:w-2xl lg:w-4xl xl:w-6xl">
+        <div className="mx-auto flex w-[90vw] flex-col gap-4 md:w-2xl lg:w-4xl xl:w-6xl">
           {messages.map((message, index) => {
             const isLastMessage = index === messages.length - 1
             return (
@@ -383,7 +400,7 @@ export default function ChatInterface() {
         )}
       >
         {isNewChat && (
-          <h1 className="mb-4 text-center text-4xl text-lg md:text-xl lg:text-3xl">
+          <h1 className="mb-4 text-center text-lg md:text-xl lg:text-3xl xl:text-4xl">
             Hello how can i help you ?
           </h1>
         )}
@@ -406,7 +423,7 @@ export default function ChatInterface() {
               <Textarea
                 ref={textareaRef}
                 placeholder={isLoading ? 'Waiting for response...' : 'Ask Anything'}
-                className="max-h-[160px] min-h-[24px] w-full resize-none overflow-y-auto rounded-3xl border-0 bg-transparent pt-0 pr-4 pb-0 pl-2 text-base leading-tight text-gray-900 placeholder:text-base placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="max-h-[260px] min-h-[24px] w-full resize-none overflow-y-auto rounded-3xl border-0 bg-transparent pt-0 pr-4 pb-0 pl-2 text-base leading-tight text-gray-900 placeholder:text-base placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                 value={inputValue}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
