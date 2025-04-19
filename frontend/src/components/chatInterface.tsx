@@ -1,7 +1,6 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { responses } from '@/lib/constants'
 import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import { ActiveButton, MessageData, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
@@ -34,7 +33,7 @@ export default function ChatInterface() {
     end: null
   })
 
-  const { mutate: sendMessage, status, isError } = useSendMessage()
+  const { mutate: sendMessage } = useSendMessage()
 
   useEffect(() => {
     const checkMobileAndViewport = () => {
@@ -131,10 +130,6 @@ export default function ChatInterface() {
         textareaRef.current.focus()
       }
     }
-  }
-
-  const getAIResponse = (userMessage: string) => {
-    return responses[Math.floor(Math.random() * responses.length)]
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
