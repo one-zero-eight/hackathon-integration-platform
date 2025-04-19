@@ -2,9 +2,9 @@ export type ActiveButton = 'none' | 'add' | 'deepSearch' | 'think'
 export type MessageType = 'user' | 'system' | 'assistant'
 
 export interface MessageData {
-  dialog_id: string
-  role: MessageType
-  content: string
+  dialog_id: number
+  role?: MessageType
+  message: string
   isLoading?: boolean
 }
 

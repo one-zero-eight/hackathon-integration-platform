@@ -24,7 +24,7 @@ export default function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false)
   const [viewportHeight, setViewportHeight] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+  const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null)
 
   const inputContainerRef = useRef<HTMLDivElement>(null)
   const shouldFocusAfterStreamingRef = useRef(false)
@@ -164,15 +164,15 @@ export default function ChatInterface() {
     e.preventDefault()
     if (inputValue.trim() && !isLoading) {
       const userMessage = inputValue.trim()
-      const userMessageId = `user-${Date.now()}`
-      const assistantMessageId = `system-${Date.now()}`
+      const userMessageId = Date.now()
+      const assistantMessageId = Date.now()
 
       // Добавляем сообщение пользователя
       setMessages((prev) => [
         ...prev,
         {
           dialog_id: userMessageId,
-          content: userMessage,
+          message: userMessage,
           role: 'user' as MessageType
         }
       ])
@@ -183,9 +183,8 @@ export default function ChatInterface() {
       setActiveButton('none')
 
       const messageData = {
-        dialog_id: `${123}`, // Замените на реальный dialog_id
-        role: 'user' as MessageType,
-        content: userMessage
+        dialog_id: 123, // Замените на реальный dialog_id
+        message: userMessage
       }
 
       // Устанавливаем состояние загрузки
@@ -193,7 +192,7 @@ export default function ChatInterface() {
 
       try {
         // Отправляем сообщение на сервер
-        await sendMessage(messageData, {
+        sendMessage(messageData, {
           onSuccess: async () => {
             try {
               // Добавляем сообщение ассистента с индикатором загрузки
@@ -201,27 +200,25 @@ export default function ChatInterface() {
                 ...prev,
                 {
                   dialog_id: assistantMessageId,
-                  content: '',
+                  message: '',
                   role: 'assistant' as MessageType,
                   isLoading: true
                 }
               ])
 
               // Отправляем запрос на получение ответа
-              const serverResponse = await getMessages(`${123}`, 1) // Замените на реальный dialog_id
+              const serverResponse = await getMessages(`${123}`)
               const assistantMessage = serverResponse[0]
 
               // Обновляем сообщение ассистента с реальным ответом
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.dialog_id === assistantMessageId
-                    ? {
+              setMessages((prev) => prev.map((msg) => msg.dialog_id === assistantMessageId
+                      ? {
                         ...msg,
-                        content: assistantMessage.content,
+                        message: assistantMessage.content,
                         isLoading: false
                       }
-                    : msg
-                )
+                      : msg
+                  )
               )
             } catch (error) {
               console.error('Ошибка при получении ответа от сервера:', error)
@@ -268,7 +265,7 @@ export default function ChatInterface() {
     }
   }
 
-  const handleCopy = async (content: string, messageId: string) => {
+  const handleCopy = async (content: string, messageId: number) => {
     try {
       await navigator.clipboard.writeText(content)
       setCopiedMessageId(messageId)
@@ -328,7 +325,7 @@ export default function ChatInterface() {
                       : 'bg-white text-gray-900'
                   )}
                 >
-                  {message.content && (
+                  {message.message && (
                     <span
                       className={
                         message.role === 'system' && isLoading && isLastMessage
@@ -336,7 +333,7 @@ export default function ChatInterface() {
                           : ''
                       }
                     >
-                      <Markdown content={message.content} />
+                      <Markdown content={message.message} />
                     </span>
                   )}
 
@@ -355,7 +352,7 @@ export default function ChatInterface() {
                       <RefreshCcw className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleCopy(message.content, message.dialog_id)}
+                      onClick={() => handleCopy(message.message, message.dialog_id)}
                       className={cn(
                         'hover:text-gray- cursor-pointer text-black transition-colors',
                         copiedMessageId === message.dialog_id && 'animate-pulse text-green-500'

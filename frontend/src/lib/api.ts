@@ -9,7 +9,7 @@ export const createMessage = async (messageData: MessageData): Promise<ViewMessa
     body: JSON.stringify(messageData)
   }
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/messages/create`, h)
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/chat/create_message`, h)
 
   if (!response.ok) {
     throw new Error('Network response was not ok')
@@ -18,10 +18,9 @@ export const createMessage = async (messageData: MessageData): Promise<ViewMessa
   return response.json()
 }
 
-export const getMessages = async (dialog_id: string, amount: number): Promise<ViewMessage[]> => {
-  const url = new URL(`${process.env.NEXT_PUBLIC_SERVER}/messages/get`)
+export const getMessages = async (dialog_id: string): Promise<ViewMessage[]> => {
+  const url = new URL(`${process.env.NEXT_PUBLIC_SERVER}/chat/chat_completion`)
   url.searchParams.append('dialog_id', dialog_id)
-  url.searchParams.append('amount', amount.toString())
 
   const h = {
     method: 'GET',
