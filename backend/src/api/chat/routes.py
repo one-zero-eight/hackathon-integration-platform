@@ -59,6 +59,8 @@ async def create_message(dialog_id: int, message: str) -> ViewMessage:
 async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
     history = await messages_repository.get_all_dialog_messages(dialog_id)
     last_message = history.pop(-1)
+    if last_message.role != Roles.USER.value:
+        raise HTTPException(400, "last message is already an AI reply")
 
     assistant_content = await get_ai_response(history, last_message.content, model)
 
