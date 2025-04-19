@@ -10,6 +10,7 @@ import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
+import { getMessages } from '@/lib/api'
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState<MessageData[]>([])
@@ -158,41 +159,15 @@ export default function ChatInterface() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     if (isNewChat) setNewChat(false)
     e.preventDefault()
     if (inputValue.trim() && !isLoading) {
       const userMessage = inputValue.trim()
       const userMessageId = `user-${Date.now()}`
-      const systemMessageId = `system-${Date.now()}`
+      const assistantMessageId = `system-${Date.now()}`
 
-      if (userMessage) {
-        const messageData = {
-          dialog_id: `${123}`,
-          role: 'user' as MessageType,
-          content: userMessage
-        }
-
-        sendMessage(messageData, {
-          onSuccess: (data) => {
-            console.log('Message sent successfully:', data)
-          },
-          onError: (error) => {
-            console.error('Error sending message:', error)
-          }
-        })
-
-        // Reset input before starting the AI response
-        setInputValue('')
-        setHasTyped(false)
-        setActiveButton('none')
-      }
-
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
-      }
-
-      // Add the user message
+      // Добавляем сообщение пользователя
       setMessages((prev) => [
         ...prev,
         {
@@ -202,43 +177,64 @@ export default function ChatInterface() {
         }
       ])
 
-      // Set loading state
+      // Сбрасываем ввод
+      setInputValue('')
+      setHasTyped(false)
+      setActiveButton('none')
+
+      const messageData = {
+        dialog_id: `${123}`, // Замените на реальный dialog_id
+        role: 'user' as MessageType,
+        content: userMessage
+      }
+
+      // Устанавливаем состояние загрузки
       setIsLoading(true)
 
-      // Add the system message with loading state
-      setMessages((prev) => [
-        ...prev,
-        {
-          dialog_id: systemMessageId,
-          content: '',
-          role: 'system' as MessageType,
-          isLoading: true
-        }
-      ])
+      try {
+        // Отправляем сообщение на сервер
+        await sendMessage(messageData, {
+          onSuccess: async () => {
+            try {
+              // Добавляем сообщение ассистента с индикатором загрузки
+              setMessages((prev) => [
+                ...prev,
+                {
+                  dialog_id: assistantMessageId,
+                  content: '',
+                  role: 'assistant' as MessageType,
+                  isLoading: true
+                }
+              ])
 
-      // Simulate AI response after a delay
-      setTimeout(() => {
-        const aiResponse = getAIResponse(userMessage)
+              // Отправляем запрос на получение ответа
+              const serverResponse = await getMessages(`${123}`, 1) // Замените на реальный dialog_id
+              const assistantMessage = serverResponse[0]
 
-        // Update the system message with content
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.dialog_id === systemMessageId
-              ? { ...msg, content: aiResponse, isLoading: false, completed: true }
-              : msg
-          )
-        )
-
+              // Обновляем сообщение ассистента с реальным ответом
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.dialog_id === assistantMessageId
+                    ? {
+                        ...msg,
+                        content: assistantMessage.content,
+                        isLoading: false
+                      }
+                    : msg
+                )
+              )
+            } catch (error) {
+              console.error('Ошибка при получении ответа от сервера:', error)
+            }
+          },
+          onError: (error) => {
+            console.error('Ошибка при отправке сообщения:', error)
+          }
+        })
+      } catch (error) {
+        console.error('Ошибка при отправке сообщения:', error)
+      } finally {
         setIsLoading(false)
-      }, 1500)
-
-      // Only focus the textarea on desktop, not on mobile
-      if (!isMobile) {
-        focusTextarea()
-      } else {
-        if (textareaRef.current) {
-          textareaRef.current.blur()
-        }
       }
     }
   }
