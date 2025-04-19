@@ -145,18 +145,6 @@ def check_database_access():
             print(f"  ❌ Error updating `settings.yaml`: {e}")
             return
 
-    def get_docker_compose_command():
-        commands = ["docker compose", "docker-compose"]
-
-        for cmd in commands:
-            try:
-                subprocess.run(cmd.split(), check=True, text=True, capture_output=True)
-                return cmd
-            except subprocess.CalledProcessError:
-                # Command not available
-                continue
-        return None
-
     def run_alembic_upgrade():
         """
         Run `alembic upgrade head` to apply migrations.
@@ -178,31 +166,7 @@ def check_database_access():
                 print("✅ Successfully connected to the database.")
             run_alembic_upgrade()
         except Exception:
-            print(f"⚠️ Failed to connect to the database at `{db_url}`")
-            docker_compose = get_docker_compose_command()
-
-            if docker_compose:
-                print(f"  ➡ Attempting to start the database using `{docker_compose} up -d db` (wait for it)")
-                try:
-                    subprocess.run(
-                        [*docker_compose.split(), "up", "-d", "--wait", "db"],
-                        check=True,
-                        text=True,
-                        capture_output=True,
-                    )
-                    print(f"  ✅ `{docker_compose} up -d db` executed successfully. Retrying connection...")
-                    # Retry the database connection after starting the container
-                    engine = create_async_engine(db_url)
-                    async with engine.connect() as conn:
-                        await conn.execute(text("SELECT 1"))
-                        print("  ✅ Successfully connected to the database after starting the container.")
-                    run_alembic_upgrade()
-                except subprocess.CalledProcessError as docker_error:
-                    print(f"  ❌ Failed to start the database using `{docker_compose} up -d db`:\n  {docker_error}")
-                except Exception as retry_error:
-                    print(f"  ❌ Retried database connection but failed again:\n  {retry_error}")
-            else:
-                print("  ❌ Docker Compose is not available, so not able to start db automatically.")
+            print(f"❌ Failed to connect to the database at `{db_url}`")
 
     asyncio.run(test_connection())
 

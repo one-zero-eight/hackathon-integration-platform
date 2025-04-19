@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 ###########################################################
 # Production stage. Copy only runtime deps that were installed in the Builder stage.
-FROM python:3.13-slim-bookworm AS production
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS production
 
 ENV PYTHONUNBUFFERED=1
 
@@ -39,4 +39,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY --chown=uv:uv . /app
 
 EXPOSE 8000
-CMD [ "uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8001", "--proxy-headers", "--forwarded-allow-ips=*" ]
+CMD ["uv", "run", "python", "-m", "src.api", "--host", "0.0.0.0", "--port", "8001", "--proxy-headers", "--forwarded-allow-ips=*"]
