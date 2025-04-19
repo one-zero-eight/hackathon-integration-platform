@@ -1,4 +1,4 @@
-import { MessageData, ViewMessage } from '@/lib/interfaces'
+import {MessageData, Models, ViewMessage} from '@/lib/interfaces'
 
 export const createMessage = async (messageData: MessageData): Promise<ViewMessage> => {
   const h = {
@@ -19,7 +19,7 @@ export const createMessage = async (messageData: MessageData): Promise<ViewMessa
 }
 
 export const getLlmMessage = async (dialog_id: string) => {
-  const model = 'deepseek-r1-distill-qwen-32b'
+  const model = Models.DEEPSEEK_DISTILLED
   const h = {
     method: 'GET',
     headers: {
