@@ -298,7 +298,7 @@ export default function ChatInterface() {
         ref={chatContainerRef}
         className="scrollbar-none flex-grow overflow-y-auto px-4 pt-12 pb-32"
       >
-        <div className="flex w-3xl max-w-3xl flex-col">
+        <div className="flex w-6xl max-w-6xl flex-col">
           {messages.map((message, index) => {
             const isLastMessage = index === messages.length - 1
             return (
@@ -311,10 +311,11 @@ export default function ChatInterface() {
               >
                 <div
                   className={cn(
-                    'max-w-[80%] rounded-2xl px-4 py-2',
+                    'max-w-[80%] rounded-2xl px-4',
+                    message.isLoading && 'py-4',
                     message.role === 'user'
                       ? 'rounded-br-none border border-gray-200 bg-red-100'
-                      : 'bg-white text-gray-900'
+                      : 'rounded-bl-none bg-[#EFEFEF] text-gray-900'
                   )}
                 >
                   {message.message && (
@@ -371,7 +372,14 @@ export default function ChatInterface() {
           isNewChat && 'bottom-1/2'
         )}
       >
-        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
+        <form
+          onSubmit={handleSubmit}
+          className={cn(
+            'mx-auto w-6xl max-w-6xl transition-all duration-500 ease-in',
+            isNewChat && 'w-4xl'
+          )}
+        >
+          {isNewChat && <h1 className="mb-2 text-center text-3xl">Hello how can i help you ?</h1>}
           <div
             ref={inputContainerRef}
             className={cn(
