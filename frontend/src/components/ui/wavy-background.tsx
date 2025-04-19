@@ -27,8 +27,9 @@ export const WavyBackground = ({
   [key: string]: any
 }) => {
   const noise = createNoise3D()
-  let w: number, h: number, nt: number, i: number, x: number, ctx: any, canvas: any
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isSafari, setIsSafari] = useState(false)
+
   const getSpeed = () => {
     switch (speed) {
       case 'slow':
@@ -40,6 +41,10 @@ export const WavyBackground = ({
     }
   }
 
+  const waveColors = colors ?? ['#38bdf8', '#818cf8', '#c084fc', '#e879f9', '#22d3ee']
+
+  let w: number, h: number, nt: number, i: number, x: number, ctx: any, canvas: any
+
   const init = () => {
     canvas = canvasRef.current
     ctx = canvas.getContext('2d')
@@ -47,15 +52,9 @@ export const WavyBackground = ({
     h = ctx.canvas.height = window.innerHeight
     ctx.filter = `blur(${blur}px)`
     nt = 0
-    window.onresize = function () {
-      w = ctx.canvas.width = window.innerWidth
-      h = ctx.canvas.height = window.innerHeight
-      ctx.filter = `blur(${blur}px)`
-    }
     render()
   }
 
-  const waveColors = colors ?? ['#38bdf8', '#818cf8', '#c084fc', '#e879f9', '#22d3ee']
   const drawWave = (n: number) => {
     nt += getSpeed()
     for (i = 0; i < n; i++) {
@@ -63,8 +62,8 @@ export const WavyBackground = ({
       ctx.lineWidth = waveWidth || 50
       ctx.strokeStyle = waveColors[i % waveColors.length]
       for (x = 0; x < w; x += 5) {
-        var y = noise(x / 800, 0.3 * i, nt) * 150 // Increased from 100 to 200 to get +-100px height
-        ctx.lineTo(x, y + h * 0.5) // adjust for height, currently at 50% of the container
+        var y = noise(x / 800, 0.3 * i, nt) * 150
+        ctx.lineTo(x, y + h * 0.5) // Adjust for height (50% of container height)
       }
       ctx.stroke()
       ctx.closePath()
@@ -75,21 +74,31 @@ export const WavyBackground = ({
   const render = () => {
     ctx.fillStyle = backgroundFill || 'black'
     ctx.globalAlpha = waveOpacity || 0.5
-    ctx.fillRect(0, 0, w, h)
+    ctx.fillRect(0, 0, w, h) // Fill the canvas with background
     drawWave(5)
-    animationId = requestAnimationFrame(render)
+    animationId = requestAnimationFrame(render) // Keep redrawing
   }
 
   useEffect(() => {
     init()
+
+    const handleResize = () => {
+      if (canvasRef.current) {
+        w = canvasRef.current.width = window.innerWidth
+        h = canvasRef.current.height = window.innerHeight
+        ctx.filter = `blur(${blur}px)`
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+
     return () => {
+      window.removeEventListener('resize', handleResize)
       cancelAnimationFrame(animationId)
     }
-  }, [])
+  }, [blur])
 
-  const [isSafari, setIsSafari] = useState(false)
   useEffect(() => {
-    // I'm sorry but i have got to support it on safari.
     setIsSafari(
       typeof window !== 'undefined' &&
         navigator.userAgent.includes('Safari') &&
@@ -98,16 +107,16 @@ export const WavyBackground = ({
   }, [])
 
   return (
-    <div className={cn('flex h-screen flex-col items-center justify-center', containerClassName)}>
+    <div className={cn('relative flex h-full w-full', containerClassName)}>
       <canvas
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-0 h-full w-full"
         ref={canvasRef}
         id="canvas"
         style={{
           ...(isSafari ? { filter: `blur(${blur}px)` } : {})
         }}
       ></canvas>
-      <div className={cn('relative z-10', className)} {...props}>
+      <div className={cn('relative z-10 h-full w-full', className)} {...props}>
         {children}
       </div>
     </div>

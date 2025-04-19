@@ -37,32 +37,34 @@ export default function ChatInterface() {
 
   useEffect(() => {
     const checkMobileAndViewport = () => {
-      const isMobileDevice = window.innerWidth < 768
-      setIsMobile(isMobileDevice)
+      const isMobileDevice = window.innerWidth < 768 // Check if mobile
+      setIsMobile(isMobileDevice) // Set the mobile state
 
-      // Capture the viewport height
-      const vh = window.innerHeight
-      setViewportHeight(vh)
+      const vh = window.innerHeight // Get the viewport height
+      setViewportHeight(vh) // Set the viewport height
 
-      // Apply fixed height to main container on mobile
       if (isMobileDevice && mainContainerRef.current) {
+        // For mobile, set the height of the container to match the viewport height
         mainContainerRef.current.style.height = `${vh}px`
+      } else {
+        // For larger screens, set the height to 100vh
+        if (mainContainerRef.current) {
+          mainContainerRef.current.style.height = `100vh`
+        }
       }
     }
 
+    // Initial call to set the height
     checkMobileAndViewport()
 
-    // Set initial height
-    if (mainContainerRef.current) {
-      mainContainerRef.current.style.height = isMobile ? `${viewportHeight}px` : '100svh'
-    }
-
+    // Listen for window resize events and adjust height accordingly
     window.addEventListener('resize', checkMobileAndViewport)
 
+    // Cleanup the event listener on component unmount
     return () => {
       window.removeEventListener('resize', checkMobileAndViewport)
     }
-  }, [isMobile, viewportHeight])
+  }, [isMobile, viewportHeight]) // Depend on viewportHeight and isMobile states
 
   useEffect(() => {
     if (textareaRef.current && !isMobile) {
@@ -234,7 +236,7 @@ export default function ChatInterface() {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Handle Cmd+Enter on both mobile and desktop
-    if (!isLoading && e.key === 'Enter' && e.metaKey) {
+    if (!isLoading && (e.key === 'Enter' || e.key === '13') && e.metaKey) {
       e.preventDefault()
       handleSubmit(e)
       return
@@ -279,34 +281,38 @@ export default function ChatInterface() {
   return (
     <WavyBackground
       ref={mainContainerRef}
-      className="flex flex-col overflow-hidden"
       backgroundFill="white"
       waveOpacity={50}
-      speed="slow"
+      speed="fast"
       blur={10}
       colors={['rgba(227, 18, 6, 0.7)', '#eaeaea', 'rgba(227, 18, 6, 0.7)']}
       style={{ height: isMobile ? `${viewportHeight}px` : '100svh' }}
     >
-      <header className="fixed top-0 right-0 left-0 z-20 flex h-12 items-center bg-white px-4">
-        <div className="flex w-full items-center justify-between px-2">
-          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full">
-            <Menu className="h-12 w-12 text-black" />
-            <span className="sr-only">Menu</span>
-          </Button>
+      <div
+        ref={mainContainerRef}
+        className="flex flex-col overflow-hidden"
+        style={{ height: isMobile ? `${viewportHeight}px` : '100svh' }}
+      >
+        <header className="fixed top-0 right-0 left-0 z-20 flex h-12 items-center bg-white px-4">
+          <div className="flex w-full items-center justify-between px-2">
+            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full">
+              <Menu className="h-12 w-12 text-black" />
+              <span className="sr-only">Menu</span>
+            </Button>
 
-          <h1 className="text-base font-medium text-gray-800">JSON Generator</h1>
+            <h1 className="text-base font-medium text-gray-800">JSON Generator</h1>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-12 w-12 cursor-pointer rounded-full"
-            onClick={handlerStartNewChat}
-          >
-            <PenSquare className="h-40 w-40 text-black" />
-            <span className="sr-only">New Chat</span>
-          </Button>
-        </div>
-      </header>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-12 w-12 cursor-pointer rounded-full"
+              onClick={handlerStartNewChat}
+            >
+              <PenSquare className="h-40 w-40 text-black" />
+              <span className="sr-only">New Chat</span>
+            </Button>
+          </div>
+        </header>
 
       <div ref={chatContainerRef} className="scrollbar-none flex-grow overflow-y-auto pt-12 pb-32">
         <div className="gap-2md:w-2xl m-auto flex w-[90vw] max-w-6xl flex-col lg:w-4xl xl:w-6xl">
@@ -341,6 +347,14 @@ export default function ChatInterface() {
                     </span>
                   )}
 
+                    {message.isLoading && message.role === 'system' && isLastMessage && (
+                      <div className="flex items-center space-x-2">
+                        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
+                        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
+                        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+                      </div>
+                    )}
+                  </div>
                   {message.isLoading && message.role === 'assistant' && isLastMessage && (
                     <div className="flex items-center space-x-2">
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
@@ -350,6 +364,32 @@ export default function ChatInterface() {
                   )}
                 </div>
 
+                  {message.role === 'system' && !message.isLoading && (
+                    <div className="mt-1 mb-2 flex items-center gap-2 px-4">
+                      <button className="hover:text-gray- cursor-pointer text-black transition-colors">
+                        <RefreshCcw className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleCopy(message.content, message.dialog_id)}
+                        className={cn(
+                          'hover:text-gray- cursor-pointer text-black transition-colors',
+                          copiedMessageId === message.dialog_id && 'animate-pulse text-green-500'
+                        )}
+                      >
+                        {copiedMessageId === message.dialog_id ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
                 {message.role === 'assistant' && !message.isLoading && (
                   <div className="mt-1 mb-2 flex items-center gap-2 px-4">
                     <button className="hover:text-gray- cursor-pointer text-black transition-colors">
@@ -377,87 +417,92 @@ export default function ChatInterface() {
         </div>
       </div>
 
-      <div
-        className={cn(
-          'fixed right-0 bottom-0 left-0 transition-all duration-500 ease-in-out md:p-4',
-          isNewChat && 'bottom-1/2'
-        )}
-      >
-        <form
-          onSubmit={handleSubmit}
+        <div
           className={cn(
-            'mx-auto w-[90vw] max-w-6xl transition-all duration-500 ease-in md:w-2xl lg:w-4xl xl:w-6xl',
-            isNewChat && 'lg:3xl md:xl xl:w-4xl'
+            'fixed right-0 bottom-0 left-0 transition-all duration-500 ease-in-out md:p-4',
+            isNewChat && 'bottom-1/2'
           )}
         >
-          {isNewChat && <h1 className="mb-2 text-center text-3xl">Hello how can i help you ?</h1>}
-          <div
-            ref={inputContainerRef}
+          <form
+            onSubmit={handleSubmit}
             className={cn(
-              'relative w-full cursor-text rounded-3xl border border-[#8A8D8F] bg-[#EFEFEF] p-3',
-              isLoading && 'opacity-80'
+              'mx-auto w-[90vw] max-w-6xl transition-all duration-500 ease-in md:w-2xl lg:w-4xl xl:w-6xl',
+              isNewChat && 'lg:3xl md:xl xl:w-4xl'
             )}
-            onClick={handleInputContainerClick}
           >
-            <div className="pb-9">
-              <Textarea
-                ref={textareaRef}
-                placeholder={isLoading ? 'Waiting for response...' : 'Ask Anything'}
-                className="max-h-[160px] min-h-[24px] w-full resize-none overflow-y-auto rounded-3xl border-0 bg-transparent pt-0 pr-4 pb-0 pl-2 text-base leading-tight text-gray-900 placeholder:text-base placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                onFocus={() => {
-                  // Ensure the textarea is scrolled into view when focused
-                  if (textareaRef.current) {
-                    textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                  }
-                }}
-              />
-            </div>
+            {isNewChat && (
+              <h1 className="mb-2 text-center text-xl md:text-2xl lg:text-3xl">
+                Hello how can i help you ?
+              </h1>
+            )}
+            <div
+              ref={inputContainerRef}
+              className={cn(
+                'relative w-full cursor-text rounded-3xl border border-[#8A8D8F] bg-[#EFEFEF] p-3',
+                isLoading && 'opacity-80'
+              )}
+              onClick={handleInputContainerClick}
+            >
+              <div className="pb-9">
+                <Textarea
+                  ref={textareaRef}
+                  placeholder={isLoading ? 'Waiting for response...' : 'Ask Anything'}
+                  className="max-h-[160px] min-h-[24px] w-full resize-none overflow-y-auto rounded-3xl border-0 bg-transparent pt-0 pr-4 pb-0 pl-2 text-base leading-tight text-gray-900 placeholder:text-base placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => {
+                    // Ensure the textarea is scrolled into view when focused
+                    if (textareaRef.current) {
+                      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }
+                  }}
+                />
+              </div>
 
-            <div className="absolute right-3 bottom-3 left-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+              <div className="absolute right-3 bottom-3 left-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className={cn(
+                        'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
+                        activeButton === 'add'
+                          ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
+                          : 'border-gray-400 bg-gray-100',
+                        isLoading && 'cursor-not-allowed opacity-50'
+                      )}
+                      onClick={() => toggleButton('add')}
+                      disabled={isLoading}
+                    >
+                      <Plus className={cn('h-4 w-4 transition-colors')} />
+                      <span className="sr-only">Add</span>
+                    </Button>
+                  </div>
+
                   <Button
-                    type="button"
+                    type="submit"
                     variant="outline"
                     size="icon"
                     className={cn(
                       'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
-                      activeButton === 'add'
+                      hasTyped
                         ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
-                        : 'border-gray-400 bg-gray-100',
-                      isLoading && 'cursor-not-allowed opacity-50'
+                        : 'border-black bg-gray-100 text-black',
+                      isLoading && 'cursor-not-allowed'
                     )}
-                    onClick={() => toggleButton('add')}
-                    disabled={isLoading}
+                    disabled={!inputValue.trim() || isLoading}
                   >
-                    <Plus className={cn('h-4 w-4 transition-colors')} />
-                    <span className="sr-only">Add</span>
+                    <ArrowUp className={cn('h-4 w-4 transition-colors')} />
+                    <span className="sr-only">Submit</span>
                   </Button>
                 </div>
-
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="icon"
-                  className={cn(
-                    'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
-                    hasTyped
-                      ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
-                      : 'border-black bg-gray-100 text-black',
-                    isLoading && 'cursor-not-allowed'
-                  )}
-                  disabled={!inputValue.trim() || isLoading}
-                >
-                  <ArrowUp className={cn('h-4 w-4 transition-colors')} />
-                  <span className="sr-only">Submit</span>
-                </Button>
               </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </WavyBackground>
   )
