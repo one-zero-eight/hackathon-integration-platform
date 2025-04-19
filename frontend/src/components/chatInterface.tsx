@@ -99,6 +99,7 @@ export default function ChatInterface() {
   }
 
   // Restore the saved selection state
+
   const restoreSelectionState = () => {
     const textarea = textareaRef.current
     const { start, end } = selectionStateRef.current
@@ -176,9 +177,9 @@ export default function ChatInterface() {
       setInputValue('')
       setHasTyped(false)
       setActiveButton('none')
-
+      const dialogID = 1
       const messageData = {
-        dialog_id: 123, // Замените на реальный dialog_id
+        dialog_id: dialogID, // Замените на реальный dialog_id
         message: userMessage
       }
 
@@ -199,7 +200,7 @@ export default function ChatInterface() {
                 }
               ])
 
-              const serverResponse = await getMessages(123)
+              const serverResponse = await getMessages(dialogID)
 
               setMessages((prev) =>
                 prev.map((msg) =>
@@ -298,7 +299,7 @@ export default function ChatInterface() {
         ref={chatContainerRef}
         className="scrollbar-none flex-grow overflow-y-auto px-4 pt-12 pb-32"
       >
-        <div className="flex w-3xl max-w-3xl flex-col">
+        <div className="mx-auto flex w-[90vw] flex-col md:w-2xl lg:w-4xl xl:w-6xl">
           {messages.map((message, index) => {
             const isLastMessage = index === messages.length - 1
             return (
@@ -311,7 +312,7 @@ export default function ChatInterface() {
               >
                 <div
                   className={cn(
-                    'max-w-[80%] rounded-2xl px-4 py-2',
+                    'max-w-[80%] rounded-2xl px-4',
                     message.role === 'user'
                       ? 'rounded-br-none border border-gray-200 bg-red-100'
                       : 'bg-white text-gray-900'
