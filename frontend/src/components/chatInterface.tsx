@@ -268,6 +268,11 @@ export default function ChatInterface() {
     }
   }
 
+  const handleNewChat = () => {
+    setMessages([])
+    setNewChat(true)
+  }
+
   return (
     <WavyBackground
       ref={mainContainerRef}
@@ -288,7 +293,12 @@ export default function ChatInterface() {
 
           <h1 className="text-base font-medium text-gray-800">JSON Generator</h1>
 
-          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-12 w-12 cursor-pointer rounded-full"
+            onClick={handleNewChat}
+          >
             <PenSquare className="h-40 w-40 text-black" />
             <span className="sr-only">New Chat</span>
           </Button>
@@ -315,7 +325,7 @@ export default function ChatInterface() {
                     'max-w-[80%] rounded-2xl px-4',
                     message.role === 'user'
                       ? 'rounded-br-none border border-gray-200 bg-red-100'
-                      : 'bg-white text-gray-900'
+                      : 'rounded-bl-none bg-[#eaeaea] text-gray-900'
                   )}
                 >
                   {message.message && (
@@ -331,7 +341,7 @@ export default function ChatInterface() {
                   )}
 
                   {message.isLoading && message.role === 'assistant' && isLastMessage && (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 rounded-br-none py-2">
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
@@ -340,7 +350,7 @@ export default function ChatInterface() {
                 </div>
 
                 {message.role === 'assistant' && !message.isLoading && (
-                  <div className="mt-1 mb-2 flex items-center gap-2 px-4">
+                  <div className="mb-2 flex items-center gap-2 rounded-b-md bg-[#eaeaea] p-1 px-4">
                     <button className="hover:text-gray- cursor-pointer text-black transition-colors">
                       <RefreshCcw className="h-4 w-4" />
                     </button>
@@ -375,7 +385,7 @@ export default function ChatInterface() {
         <form
           onSubmit={handleSubmit}
           className={cn(
-            'mx-auto w-[90vh] transition-all duration-500 ease-in md:w-2xl lg:w-4xl xl:w-6xl',
+            'mx-auto w-[90vw] transition-all duration-500 ease-in md:w-2xl lg:w-4xl xl:w-6xl',
             isNewChat && 'md:w-xl lg:w-2xl xl:w-4xl'
           )}
         >

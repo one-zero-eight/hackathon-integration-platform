@@ -1,4 +1,5 @@
 // components/ChatMarkdown.tsx
+import { cn } from '@/lib/utils'
 import 'highlight.js/styles/github-dark.css'
 import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
@@ -34,31 +35,19 @@ const ChatMarkdown: React.FC<ChatMarkdownProps> = ({ content }) => {
     <div className="relative">
       {/* Thinking section - only shown if there's <think> content */}
       {thinkingContent && (
-        <div className="mb-2">
+        <div className="my-2">
           <button
             onClick={() => setShowThinking(!showThinking)}
-            className="flex items-center text-xs text-gray-500 hover:text-gray-700"
+            className={cn(
+              'flex cursor-pointer items-center rounded-md bg-gray-300 px-2 py-1 text-xs text-gray-500 hover:text-gray-700',
+              showThinking && 'rounded-b-none'
+            )}
           >
             <span className="mr-1">{showThinking ? '▼' : '▶'} Thinking process</span>
-            {!showThinking && (
-              <span className="flex items-center">
-                <span className="ml-1 flex space-x-1">
-                  <span className="h-1 w-1 animate-pulse rounded-full bg-gray-400"></span>
-                  <span
-                    className="h-1 w-1 animate-pulse rounded-full bg-gray-400"
-                    style={{ animationDelay: '0.2s' }}
-                  ></span>
-                  <span
-                    className="h-1 w-1 animate-pulse rounded-full bg-gray-400"
-                    style={{ animationDelay: '0.4s' }}
-                  ></span>
-                </span>
-              </span>
-            )}
           </button>
 
           {showThinking && (
-            <div className="mt-1 rounded-lg bg-gray-100 p-3 text-sm text-gray-700">
+            <div className="rounded-lg rounded-tl-none bg-gray-300 p-3 text-sm text-gray-700">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={rehypePlugins}
