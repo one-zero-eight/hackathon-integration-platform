@@ -74,8 +74,9 @@ class MessageRepository:
     async def get_all_dialog_messages(self, dialog_id: int) -> list[ViewMessage]:
         async with self._create_session() as session:
             query = select(Message).where(Message.dialog_id == dialog_id).order_by(Message.id)
-            objs = await session.scalars(query)
-            return [ViewMessage.model_validate(obj) for obj in objs]
+            result = await session.execute(query)
+            objs = result.unique().scalars().all()
+        return [ViewMessage.model_validate(obj) for obj in objs]
 
     async def delete_message(self, message_id: int) -> ViewMessage | None:
         async with self._create_session() as session:
