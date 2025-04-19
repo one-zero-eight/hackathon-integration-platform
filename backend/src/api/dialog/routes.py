@@ -13,7 +13,7 @@ async def new_dialog() -> ViewDialog:
 
 
 @router.get("/dialog/get_dialog")
-async def dialog(dialog_id: int) -> ViewDialog:
+async def get_dialog(dialog_id: int) -> ViewDialog:
     dialog = await dialog_repository.get_dialog(dialog_id)
     if dialog is None:
         raise HTTPException(status_code=404, detail="Dialog not found")
