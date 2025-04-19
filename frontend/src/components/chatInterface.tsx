@@ -1,6 +1,7 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { getMessages } from '@/lib/api'
 import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import { ActiveButton, MessageData, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
@@ -9,7 +10,6 @@ import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
-import { getMessages } from '@/lib/api'
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState<MessageData[]>([])
@@ -24,7 +24,7 @@ export default function ChatInterface() {
   const [viewportHeight, setViewportHeight] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null)
-
+  const [chatId, setChatId] = useState<number>()
   const inputContainerRef = useRef<HTMLDivElement>(null)
   const shouldFocusAfterStreamingRef = useRef(false)
   const mainContainerRef = useRef<HTMLDivElement>(null)
@@ -155,7 +155,11 @@ export default function ChatInterface() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    if (isNewChat) setNewChat(false)
+    if (isNewChat) {
+      const id = Number(new Date())
+      setChatId(id)
+      setNewChat(false)
+    }
     e.preventDefault()
     if (inputValue.trim() && !isLoading) {
       const userMessage = inputValue.trim()
@@ -267,6 +271,11 @@ export default function ChatInterface() {
     }
   }
 
+  const handlerStartNewChat = () => {
+    setNewChat(true)
+    setMessages([])
+    setInputValue('')
+  }
   return (
     <WavyBackground
       ref={mainContainerRef}
@@ -287,18 +296,20 @@ export default function ChatInterface() {
 
           <h1 className="text-base font-medium text-gray-800">JSON Generator</h1>
 
-          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-12 w-12 cursor-pointer rounded-full"
+            onClick={handlerStartNewChat}
+          >
             <PenSquare className="h-40 w-40 text-black" />
             <span className="sr-only">New Chat</span>
           </Button>
         </div>
       </header>
 
-      <div
-        ref={chatContainerRef}
-        className="scrollbar-none flex-grow overflow-y-auto px-4 pt-12 pb-32"
-      >
-        <div className="flex w-6xl max-w-6xl flex-col">
+      <div ref={chatContainerRef} className="scrollbar-none flex-grow overflow-y-auto pt-12 pb-32">
+        <div className="gap-2md:w-2xl m-auto flex w-[90vw] max-w-6xl flex-col lg:w-4xl xl:w-6xl">
           {messages.map((message, index) => {
             const isLastMessage = index === messages.length - 1
             return (
@@ -368,15 +379,15 @@ export default function ChatInterface() {
 
       <div
         className={cn(
-          'fixed right-0 bottom-0 left-0 p-4 transition-all duration-500 ease-in-out',
+          'fixed right-0 bottom-0 left-0 transition-all duration-500 ease-in-out md:p-4',
           isNewChat && 'bottom-1/2'
         )}
       >
         <form
           onSubmit={handleSubmit}
           className={cn(
-            'mx-auto w-6xl max-w-6xl transition-all duration-500 ease-in',
-            isNewChat && 'w-4xl'
+            'mx-auto w-[90vw] max-w-6xl transition-all duration-500 ease-in md:w-2xl lg:w-4xl xl:w-6xl',
+            isNewChat && 'lg:3xl md:xl xl:w-4xl'
           )}
         >
           {isNewChat && <h1 className="mb-2 text-center text-3xl">Hello how can i help you ?</h1>}
