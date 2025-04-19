@@ -24,7 +24,6 @@ export default function ChatInterface() {
   const [viewportHeight, setViewportHeight] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null)
-
   const inputContainerRef = useRef<HTMLDivElement>(null)
   const shouldFocusAfterStreamingRef = useRef(false)
   const mainContainerRef = useRef<HTMLDivElement>(null)
@@ -188,7 +187,7 @@ export default function ChatInterface() {
 
       setHasTyped(false)
       setActiveButton('none')
-      const dialogID = 1
+      const dialogID = 6
       const messageData = {
         dialog_id: dialogID, // Замените на реальный dialog_id
         message: userMessage
@@ -301,23 +300,28 @@ export default function ChatInterface() {
       colors={['rgba(227, 18, 6, 0.7)', '#eaeaea', 'rgba(227, 18, 6, 0.7)']}
       style={{ height: isMobile ? `${viewportHeight}px` : '100svh' }}
     >
-      <header className="fixed top-0 right-0 left-0 z-20 flex h-12 items-center bg-white px-4">
-        <div className="flex w-full items-center justify-between px-2">
-          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full">
-            <Menu className="h-12 w-12 text-black" />
+      <header className="fixed top-0 right-0 left-0 z-20 flex items-center bg-white px-4">
+        <div className="flex w-full items-center justify-between px-2 py-4">
+          <Button
+            variant="ghost"
+            disabled
+            size="icon"
+            className="h-16 w-16 cursor-pointer rounded-full"
+          >
+            <Menu className="h-16 w-16 text-black" />
             <span className="sr-only">Menu</span>
           </Button>
 
           <h1 className="text-base font-medium text-gray-800">JSON Generator</h1>
 
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
-            className="h-12 w-12 cursor-pointer rounded-full"
+            className="h-12 w-auto cursor-pointer rounded-full px-4"
             onClick={handleNewChat}
           >
             <PenSquare className="h-40 w-40 text-black" />
-            <span className="sr-only">New Chat</span>
+            New Chat
           </Button>
         </div>
       </header>
