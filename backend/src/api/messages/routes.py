@@ -13,12 +13,12 @@ async def create_message(message: CreateMessage) -> ViewMessage:
 
 
 @router.get("/messages/get")
-async def get_messages(dialog_id: int, amount: int = 0) -> list[ViewMessage]:
-    """
-    Get n last messages from dialog. To get all messages, set amount to 0.
-    """
-    if amount == 0:
-        messages = await messages_repository.get_all_messages(dialog_id)
-    else:
-        messages = await messages_repository.get_messages(dialog_id, amount)
-    return messages
+async def get_message(message_id: int) -> ViewMessage | None:
+    message = await messages_repository.get_message_by_id(message_id)
+    return message
+
+
+@router.delete("/messages/delete")
+async def delete_message(message_id: int) -> ViewMessage:
+    message = await messages_repository.delete_message(message_id)
+    return message

@@ -11,3 +11,9 @@ class Models(StrEnum):
     QWEN_2_5_CODER = "qwen2.5-coder-7b-instruct"
     LLAMA_3_3 = "llama-3.3-70b-instruct"
     QWEN_2_5_72 = "llama-3.3-70b-instruct"
+
+
+class Roles(StrEnum):
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"

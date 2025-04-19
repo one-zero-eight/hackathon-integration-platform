@@ -8,7 +8,7 @@ class ApiSettings(BaseModel):
     app_root_path: str = Field("")
     'Prefix for the API path (e.g. "/api/v0")'
     cors_allow_origin_regex: str = ".*"
-    "Allowed origins for CORS: from which domains requests to the API are allowed. Specify as a regex: `https://.*.innohassle.ru`"
+    "Allowed origins for CORS: from which domains requests to the API are allowed."
     db_url: SecretStr = Field(
         ...,
         examples=[
