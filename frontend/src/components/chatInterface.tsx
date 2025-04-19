@@ -372,7 +372,13 @@ export default function ChatInterface() {
           isNewChat && 'bottom-1/2'
         )}
       >
-        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
+        <form
+          onSubmit={handleSubmit}
+          className={cn(
+            'mx-auto w-[90vh] transition-all duration-500 ease-in md:w-2xl lg:w-4xl xl:w-6xl',
+            isNewChat && 'md:w-xl lg:w-2xl xl:w-4xl'
+          )}
+        >
           <div
             ref={inputContainerRef}
             className={cn(
