@@ -1,53 +1,26 @@
 from fastapi import APIRouter, Body, HTTPException
-from httpx import AsyncClient, Timeout
 
-from src.config import api_settings
+from src.api.chat.ai_service import ConditionalPipeline
 from src.db.repositories import dialog_repository, messages_repository
 from src.schemas import CreateMessage, ViewMessage
 from src.schemas.chat import Models, Roles
 
+TEST_VALIDATION_PROMPT = """
+Check if you have enough data to provide answer to user. Prompt user if you don't have enough data. Do not assume anything.
+""".strip()
+
 router = APIRouter(tags=["chat"])
-
-MWS_GPT_API_ENDPOINT = "https://api.gpt.mws.ru/v1/chat/completions"
-
-
-async def get_ai_response(history: list[ViewMessage], message: str, model: Models) -> str:
-    payload_msgs = [
-        {
-            "role": m.role.value,
-            "content": m.content,
-        }
-        for m in history
-    ]
-    payload_msgs.append(
-        {
-            "role": Roles.USER.value,
-            "content": message,
-        }
-    )
-
-    payload = {
-        "model": model.value,
-        "messages": payload_msgs,
-        "temperature": 0.4,
-    }
-    headers = {
-        "Authorization": f"Bearer {api_settings.mws_gpt_api_key.get_secret_value()}",
-    }
-
-    async with AsyncClient() as client:
-        resp = await client.post(MWS_GPT_API_ENDPOINT, headers=headers, json=payload, timeout=Timeout(10, read=None))
-
-    if resp.status_code != 200:
-        raise HTTPException(502, f"GPT API error: {resp.status_code} {resp.text}")
-
-    return resp.json()["choices"][0]["message"]["content"]
 
 
 @router.post("/chat/create_message")
 async def create_message(dialog_id: int = Body(...), message: str = Body(...)) -> ViewMessage:
     if await dialog_repository.get_dialog(dialog_id) is None:
         raise HTTPException(404, f"dialog {dialog_id} not found")
+
+    history = await messages_repository.get_all_dialog_messages(dialog_id)
+    last_message = history[-1]
+    if last_message and last_message.role == Roles.USER:
+        raise HTTPException(400, "last message is already a user message")
 
     created_message = CreateMessage(
         dialog_id=dialog_id,
@@ -64,11 +37,18 @@ async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
         raise HTTPException(404, f"dialog {dialog_id} not found")
 
     history = await messages_repository.get_all_dialog_messages(dialog_id)
-    last_message = history.pop(-1)
-    if last_message.role != Roles.USER.value:
+    last_message = history[-1]
+    if last_message and last_message.role != Roles.USER:
         raise HTTPException(400, "last message is already an AI reply")
 
-    assistant_content = await get_ai_response(history, last_message.content, model)
+    pipeline = ConditionalPipeline(
+        validation_prompt=TEST_VALIDATION_PROMPT,
+        validation_model=Models.GEMMA_3,
+        main_model=model,
+    )
+    assistant_content = await pipeline.run(
+        history=history,
+    )
 
     assistant_msg = CreateMessage(
         dialog_id=dialog_id,
@@ -115,16 +95,19 @@ async def regenerate_response(response_id: int) -> ViewMessage:
 
     await messages_repository.delete_message(response_id)
 
-    dialog_id = request.dialog_id
-    history = await messages_repository.get_all_dialog_messages(dialog_id)
-    try:
-        history.remove(request)
-    except ValueError:
-        pass
+    history = await messages_repository.get_all_dialog_messages(request.dialog_id)
 
-    assistant_content = await get_ai_response(history, request.content, response.model)
+    pipeline = ConditionalPipeline(
+        validation_prompt=TEST_VALIDATION_PROMPT,
+        validation_model=Models.LLAMA_3_3,
+        main_model=response.model,
+    )
+    assistant_content = await pipeline.run(
+        history=history,
+    )
+
     assistant_msg = CreateMessage(
-        dialog_id=dialog_id,
+        dialog_id=request.dialog_id,
         role=Roles.ASSISTANT,
         content=assistant_content,
         model=response.model,

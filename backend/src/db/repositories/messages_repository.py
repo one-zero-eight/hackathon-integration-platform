@@ -54,7 +54,7 @@ class MessageRepository:
             result = await session.execute(
                 select(Message).options(joinedload(Message.parent)).where(Message.id == message_id)
             )
-            message: Message = result.scalar_one_or_none()
+            message: Message = result.unique().scalar_one_or_none()
             if not message or not message.parent:
                 return None
 

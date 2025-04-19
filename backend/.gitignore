@@ -1,15 +1,17 @@
-### PyCharm ###
+### IDE ###
 .idea
+.vscode
 
 ### Cache ###
 __pycache__
 .ruff_cache
+*.py[cod]
 
 ### Environment ###
 .env
 settings.yaml
+private.pem
+public.pem
 
-### Data ###
-*.sqlite
-data/files/*
-!data/files/.gitkeep
+### OS ###
+.DS_Store
