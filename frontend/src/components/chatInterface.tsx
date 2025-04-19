@@ -2,16 +2,17 @@
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { responses } from '@/lib/constants'
-import { ActiveButton, MessagesMock as Messages, MessageType } from '@/lib/interfaces'
+import { ActiveButton, MessageData, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
 import { ArrowUp, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
+import { useSendMessage } from '@/lib/hooks/useSendMessage'
 
 export default function ChatInterface() {
-  const [messages, setMessages] = useState<Messages[]>([])
+  const [messages, setMessages] = useState<MessageData[]>([])
   const [isNewChat, setNewChat] = useState<boolean>(true)
   const [inputValue, setInputValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -30,6 +31,8 @@ export default function ChatInterface() {
     start: null,
     end: null
   })
+
+  const { mutate: sendMessage, status, isError } = useSendMessage()
 
   useEffect(() => {
     const checkMobileAndViewport = () => {
@@ -159,14 +162,30 @@ export default function ChatInterface() {
     e.preventDefault()
     if (inputValue.trim() && !isLoading) {
       const userMessage = inputValue.trim()
-
       const userMessageId = `user-${Date.now()}`
       const systemMessageId = `system-${Date.now()}`
 
-      // Reset input before starting the AI response
-      setInputValue('')
-      setHasTyped(false)
-      setActiveButton('none')
+      if (userMessage) {
+        const messageData = {
+          dialog_id: `${123}`,
+          role: 'user' as MessageType,
+          content: userMessage
+        }
+
+        sendMessage(messageData, {
+          onSuccess: (data) => {
+            console.log('Message sent successfully:', data)
+          },
+          onError: (error) => {
+            console.error('Error sending message:', error)
+          }
+        })
+
+        // Reset input before starting the AI response
+        setInputValue('')
+        setHasTyped(false)
+        setActiveButton('none')
+      }
 
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'
@@ -176,9 +195,9 @@ export default function ChatInterface() {
       setMessages((prev) => [
         ...prev,
         {
-          id: userMessageId,
+          dialog_id: userMessageId,
           content: userMessage,
-          type: 'user' as MessageType
+          role: 'user' as MessageType
         }
       ])
 
@@ -189,9 +208,9 @@ export default function ChatInterface() {
       setMessages((prev) => [
         ...prev,
         {
-          id: systemMessageId,
+          dialog_id: systemMessageId,
           content: '',
-          type: 'system' as MessageType,
+          role: 'system' as MessageType,
           isLoading: true
         }
       ])
@@ -203,7 +222,7 @@ export default function ChatInterface() {
         // Update the system message with content
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === systemMessageId
+            msg.dialog_id === systemMessageId
               ? { ...msg, content: aiResponse, isLoading: false, completed: true }
               : msg
           )
@@ -288,16 +307,16 @@ export default function ChatInterface() {
             const isLastMessage = index === messages.length - 1
             return (
               <div
-                key={message.id}
+                key={message.dialog_id}
                 className={cn(
                   'flex w-[100%] flex-col',
-                  message.type === 'user' ? 'items-end' : 'items-start'
+                  message.role === 'user' ? 'items-end' : 'items-start'
                 )}
               >
                 <div
                   className={cn(
                     'max-w-[80%] rounded-2xl px-4 py-2',
-                    message.type === 'user'
+                    message.role === 'user'
                       ? 'rounded-br-none border border-gray-200 bg-red-100'
                       : 'bg-white text-gray-900'
                   )}
@@ -305,7 +324,7 @@ export default function ChatInterface() {
                   {message.content && (
                     <span
                       className={
-                        message.type === 'system' && isLoading && isLastMessage
+                        message.role === 'system' && isLoading && isLastMessage
                           ? 'animate-fade-in'
                           : ''
                       }
@@ -314,7 +333,7 @@ export default function ChatInterface() {
                     </span>
                   )}
 
-                  {message.isLoading && message.type === 'system' && isLastMessage && (
+                  {message.isLoading && message.role === 'system' && isLastMessage && (
                     <div className="flex items-center space-x-2">
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
@@ -324,7 +343,7 @@ export default function ChatInterface() {
                 </div>
 
                 {/* Action buttons for system messages */}
-                {message.type === 'system' && !message.isLoading && (
+                {message.role === 'system' && !message.isLoading && (
                   <div className="mt-1 mb-2 flex items-center gap-2 px-4">
                     <button className="hover:text-gray- cursor-pointer text-black transition-colors">
                       <RefreshCcw className="h-4 w-4" />

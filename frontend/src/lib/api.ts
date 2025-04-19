@@ -1,6 +1,6 @@
-import { MessageData } from '@/lib/interfaces'
+import { MessageData, ViewMessage } from '@/lib/interfaces'
 
-export const createMessage = async (messageData: MessageData) => {
+export const createMessage = async (messageData: MessageData): Promise<ViewMessage> => {
   const h = {
     method: 'POST',
     headers: {
@@ -9,7 +9,7 @@ export const createMessage = async (messageData: MessageData) => {
     body: JSON.stringify(messageData)
   }
 
-  const response = await fetch('/messages/create', h)
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER}/messages/create`, h)
 
   if (!response.ok) {
     throw new Error('Network response was not ok')

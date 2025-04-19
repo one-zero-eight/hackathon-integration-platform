@@ -1,15 +1,17 @@
 export type ActiveButton = 'none' | 'add' | 'deepSearch' | 'think'
 export type MessageType = 'user' | 'system' | 'assistant'
 
-export interface MessagesMock {
-  id: string // Unique identifier for each message
-  type: MessageType
-  content: string // The content of the message (text)
+export interface MessageData {
+  dialog_id: string
+  role: MessageType
+  content: string
   isLoading?: boolean
 }
 
-export interface MessageData {
-  dialogId: string
-  type: MessageType
-  comment: string
+export interface ViewMessage {
+  id: string
+  dialog_id: string
+  role: MessageType
+  content: string
+  createdAt: string
 }
