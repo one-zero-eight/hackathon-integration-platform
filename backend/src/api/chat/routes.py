@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 from httpx import AsyncClient, Timeout
 
 from src.config import api_settings
 from src.db.repositories.messages_repository import messages_repository
+from src.schemas import CreateMessage, ViewMessage
 from src.schemas.chat import Models, Roles
-from src.schemas.message import CreateMessage, ViewMessage
 
 router = APIRouter(tags=["chat"])
 
@@ -45,7 +45,7 @@ async def get_ai_response(history: list[ViewMessage], message: str, model: Model
 
 
 @router.post("/chat/create_message")
-async def create_message(dialog_id: int, message: str) -> ViewMessage:
+async def create_message(dialog_id: int = Body(...), message: str = Body(...)) -> ViewMessage:
     created_message = CreateMessage(
         dialog_id=dialog_id,
         role=Roles.USER,
@@ -56,7 +56,7 @@ async def create_message(dialog_id: int, message: str) -> ViewMessage:
 
 
 @router.get("/chat/chat_completion")
-async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
+async def chat_completion(dialog_id: int = Body(...), model: Models = Body(...)) -> ViewMessage:
     history = await messages_repository.get_all_dialog_messages(dialog_id)
     last_message = history.pop(-1)
     if last_message.role != Roles.USER.value:
@@ -77,7 +77,7 @@ async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
 
 
 @router.get("/chat/get_history")
-async def get_messages(dialog_id: int, amount: int = 0) -> list[ViewMessage]:
+async def get_messages(dialog_id: int = Body(...), amount: int = Body(...)) -> list[ViewMessage]:
     """
     Get n last messages from dialog. To get all messages, set amount to 0.
     """
