@@ -6,7 +6,7 @@ from sqlalchemy.orm import joinedload
 
 from src.db import AbstractSQLAlchemyStorage
 from src.db.models import Message
-from src.schemas.message import CreateMessage, ViewMessage
+from src.schemas import CreateMessage, ViewMessage
 
 
 class MessageRepository:
