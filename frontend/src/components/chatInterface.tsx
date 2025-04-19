@@ -190,7 +190,7 @@ export default function ChatInterface() {
       setActiveButton('none')
       const dialogID = 1
       const messageData = {
-        dialog_id: dialogID, // Замените на реальный dialog_id
+        dialog_id: dialogID,
         message: userMessage
       }
 
@@ -225,15 +225,15 @@ export default function ChatInterface() {
                 )
               )
             } catch (error) {
-              console.error('Ошибка при получении ответа от сервера:', error)
+              console.error('Error while receiving message to the server:', error)
             }
           },
           onError: (error) => {
-            console.error('Ошибка при отправке сообщения:', error)
+            console.error('OnError while sending the message:', error)
           }
         })
       } catch (error) {
-        console.error('Ошибка при отправке сообщения:', error)
+        console.error('Error while sending the message:', error)
       } finally {
         setIsLoading(false)
       }
