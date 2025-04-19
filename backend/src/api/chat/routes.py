@@ -56,7 +56,7 @@ async def create_message(dialog_id: int = Body(...), message: str = Body(...)) -
 
 
 @router.get("/chat/chat_completion")
-async def chat_completion(dialog_id: int = Body(...), model: Models = Body(...)) -> ViewMessage:
+async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
     history = await messages_repository.get_all_dialog_messages(dialog_id)
     last_message = history.pop(-1)
     if last_message.role != Roles.USER.value:
@@ -77,7 +77,7 @@ async def chat_completion(dialog_id: int = Body(...), model: Models = Body(...))
 
 
 @router.get("/chat/get_history")
-async def get_messages(dialog_id: int = Body(...), amount: int = Body(...)) -> list[ViewMessage]:
+async def get_messages(dialog_id: int, amount: int = 0) -> list[ViewMessage]:
     """
     Get n last messages from dialog. To get all messages, set amount to 0.
     """
