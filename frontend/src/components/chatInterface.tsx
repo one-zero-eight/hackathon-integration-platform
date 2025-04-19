@@ -165,7 +165,7 @@ export default function ChatInterface() {
     if (inputValue.trim() && !isLoading) {
       const userMessage = inputValue.trim()
       const userMessageId = Date.now()
-      const assistantMessageId = Date.now()
+      const assistantMessageId = Date.now() + 1
 
       // Добавляем сообщение пользователя
       setMessages((prev) => [
@@ -191,11 +191,9 @@ export default function ChatInterface() {
       setIsLoading(true)
 
       try {
-        // Отправляем сообщение на сервер
         sendMessage(messageData, {
           onSuccess: async () => {
             try {
-              // Добавляем сообщение ассистента с индикатором загрузки
               setMessages((prev) => [
                 ...prev,
                 {
@@ -206,19 +204,18 @@ export default function ChatInterface() {
                 }
               ])
 
-              // Отправляем запрос на получение ответа
-              const serverResponse = await getMessages(`${123}`)
-              const assistantMessage = serverResponse[0]
+              const serverResponse = await getMessages(123)
 
-              // Обновляем сообщение ассистента с реальным ответом
-              setMessages((prev) => prev.map((msg) => msg.dialog_id === assistantMessageId
-                      ? {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.dialog_id === assistantMessageId
+                    ? {
                         ...msg,
-                        message: assistantMessage.content,
+                        message: serverResponse.content,
                         isLoading: false
                       }
-                      : msg
-                  )
+                    : msg
+                )
               )
             } catch (error) {
               console.error('Ошибка при получении ответа от сервера:', error)
@@ -328,7 +325,7 @@ export default function ChatInterface() {
                   {message.message && (
                     <span
                       className={
-                        message.role === 'system' && isLoading && isLastMessage
+                        message.role === 'assistant' && isLoading && isLastMessage
                           ? 'animate-fade-in'
                           : ''
                       }
@@ -337,7 +334,7 @@ export default function ChatInterface() {
                     </span>
                   )}
 
-                  {message.isLoading && message.role === 'system' && isLastMessage && (
+                  {message.isLoading && message.role === 'assistant' && isLastMessage && (
                     <div className="flex items-center space-x-2">
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
                       <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
@@ -346,7 +343,7 @@ export default function ChatInterface() {
                   )}
                 </div>
 
-                {message.role === 'system' && !message.isLoading && (
+                {message.role === 'assistant' && !message.isLoading && (
                   <div className="mt-1 mb-2 flex items-center gap-2 px-4">
                     <button className="hover:text-gray- cursor-pointer text-black transition-colors">
                       <RefreshCcw className="h-4 w-4" />
