@@ -396,10 +396,7 @@ export default function ChatInterface() {
 
   const handleDeleteMessage = async (userMessageId: number, assistantMessageId: number) => {
     try {
-      await Promise.all([
-        deleteMessageMutation.mutateAsync(userMessageId),
-        deleteMessageMutation.mutateAsync(assistantMessageId)
-      ])
+      await deleteMessageMutation.mutateAsync(userMessageId)
 
       setMessages((prev) => {
         const updatedMessages = prev.filter(
@@ -530,7 +527,6 @@ export default function ChatInterface() {
                       )}
                       onClick={() => {
                         const userMessageId = messages[index - 1]?.id
-                        console.log(message)
                         const assistantMessageId = message.id
                         userMessageId && assistantMessageId
                           ? handleDeleteMessage(userMessageId, assistantMessageId)
