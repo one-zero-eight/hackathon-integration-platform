@@ -10,6 +10,8 @@ import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
+import {useSendMessage} from "@/lib/hooks/useSendMessage";
+import {useStartChat} from "@/lib/hooks/useStartChat";
 
 export default function ChatInterface() {
   const [chatID, setChatId] = useState<number | undefined>()
@@ -33,6 +35,9 @@ export default function ChatInterface() {
     start: null,
     end: null
   })
+
+  const sendMessageMutation = useSendMessage()
+  const startChatMutation = useStartChat()
 
   useEffect(() => {
     if (chatID && messages.length > 0) {
@@ -197,14 +202,6 @@ export default function ChatInterface() {
       }
     }
   }
-
-  const startChatMutation = useMutation({
-    mutationFn: createNewChat
-  })
-
-  const sendMessageMutation = useMutation({
-    mutationFn: (data: { dialog_id: number; message: string }) => createMessage(data)
-  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
