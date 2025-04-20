@@ -7,6 +7,7 @@ export interface MessageData {
   role?: MessageType
   message: string
   isLoading?: boolean
+  replyTo?: string
 }
 
 export interface ViewMessage {

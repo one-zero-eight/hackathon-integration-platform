@@ -1,7 +1,7 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { createMessage, createNewChat, getDialoge, getMessages } from '@/lib/api'
+import { createMessage, createNewChat, getHistory, getMessages } from '@/lib/api'
 import { ActiveButton, MessageData, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
 import { useMutation } from '@tanstack/react-query'
@@ -56,7 +56,7 @@ export default function ChatInterface() {
           }
         } else {
           try {
-            const history = await getDialoge(parsedId, 0)
+            const history = await getHistory(parsedId, 0)
             setMessages(history)
           } catch (err) {
             console.error('Error fetching chat history:', err)
@@ -213,7 +213,6 @@ export default function ChatInterface() {
     try {
       let dialogID = chatID
 
-      // ✅ Create new chat if needed
       if (!dialogID || isNewChat) {
         const { id } = await startChatMutation.mutateAsync()
         dialogID = id
@@ -265,6 +264,7 @@ export default function ChatInterface() {
           msg.id === assistantMessageId
             ? {
                 ...msg,
+                id: Number(response.id),
                 message: response.content,
                 isLoading: false
               }

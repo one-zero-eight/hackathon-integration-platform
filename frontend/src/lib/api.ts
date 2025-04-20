@@ -45,7 +45,7 @@ export const createNewChat = async (): Promise<NewChat> => {
   return response.json()
 }
 
-export const getDialoge = async (dialogId: number, amount = 0) => {
+export const getHistory = async (dialogId: number, amount = 0): Promise<MessageData[]> => {
   const url = new URL(`${process.env.NEXT_PUBLIC_SERVER}/chat/get_history`)
   url.searchParams.append('dialog_id', dialogId.toString())
   url.searchParams.append('amount', amount.toString()) // 0 = all messages
@@ -62,8 +62,7 @@ export const getDialoge = async (dialogId: number, amount = 0) => {
     throw new Error(`Failed to fetch dialog history: ${response.statusText}`)
   }
 
-  const data = await response.json()
-  return data
+  return response.json()
 }
 
 export const deleteMessage = async (message_id: number): Promise<void> => {
@@ -80,9 +79,9 @@ export const deleteMessage = async (message_id: number): Promise<void> => {
   if (!response.ok) throw new Error('Delete message: network response was not ok')
 }
 
-export const regenerateMessage = async (response_id: number): Promise<MessageData> => {
+export const regenerateMessage = async (message_id: number): Promise<MessageData> => {
   const url = new URL(`${process.env.NEXT_PUBLIC_SERVER}/chat/regenerate`)
-  url.searchParams.append('message_id', response_id.toString())
+  url.searchParams.append('message_id', message_id.toString())
 
   const response = await fetch(url.toString(), {
     method: 'POST',
