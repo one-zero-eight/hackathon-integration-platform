@@ -1,18 +1,18 @@
 'use client'
+import type React from 'react'
+import { ArrowUp, Check, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { createMessage, createNewChat, getHistory, getMessages } from '@/lib/api'
-import { ActiveButton, MessageData, MessageType } from '@/lib/interfaces'
-import { cn } from '@/lib/utils'
-import { useMutation } from '@tanstack/react-query'
-import { ArrowUp, Check, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
-import type React from 'react'
-import { useEffect, useRef, useState } from 'react'
-import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
+import { cn } from '@/lib/utils'
+import { ActiveButton, MessageData, MessageType } from '@/lib/interfaces'
+import { getHistory, getMessages } from '@/lib/api'
 import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import { useStartChat } from '@/lib/hooks/useStartChat'
 import { useCreateChat } from '@/lib/hooks/useCreateChat'
+import { useRegenMessage } from '@/lib/hooks/useRegenMessage'
+import Markdown from './MarkDown'
 
 export default function ChatInterface() {
   const [chatID, setChatId] = useState<number | undefined>()
@@ -39,6 +39,7 @@ export default function ChatInterface() {
 
   const sendMessageMutation = useSendMessage()
   const startChatMutation = useStartChat()
+  const regenMessageMutation = useRegenMessage()
 
   useEffect(() => {
     if (chatID && messages.length > 0) {
@@ -246,7 +247,6 @@ export default function ChatInterface() {
       ])
 
       // Сбрасываем ввод
-
       setInputValue('')
       resetTextareaHeight()
       setHasTyped(false)
@@ -342,6 +342,46 @@ export default function ChatInterface() {
       textareaRef.current.style.height = '24px'
     }
   }
+
+  const handleRegenerateMessage = async (message_id: number) => {
+    try {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === message_id
+            ? {
+                ...msg,
+                message: '',
+                isLoading: true
+              }
+            : msg
+        )
+      )
+      setIsLoading(true)
+
+      const regenMessage = await regenMessageMutation.mutateAsync(message_id)
+
+      console.log(regenMessage)
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === message_id
+            ? {
+                ...msg,
+                id: regenMessage.id,
+                message: regenMessage.message,
+                isLoading: false
+              }
+            : msg
+        )
+      )
+    } catch (error) {
+      console.error('Error regenerating message:', error)
+      setIsLoading(false)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <WavyBackground
       ref={mainContainerRef}
@@ -425,7 +465,10 @@ export default function ChatInterface() {
 
                 {message.role === 'assistant' && !message.isLoading && (
                   <div className="mb-2 flex items-center gap-2 rounded-b-md bg-[#eaeaea] p-1 px-4">
-                    <button className="hover:text-gray- cursor-pointer text-black transition-colors">
+                    <button
+                      onClick={() => handleRegenerateMessage(message.id!)}
+                      className="hover:text-gray- cursor-pointer text-black transition-colors"
+                    >
                       <RefreshCcw className="h-4 w-4" />
                     </button>
                     <button

@@ -8,7 +8,7 @@ from src.config import api_settings
 from src.schemas import ViewMessage
 from src.schemas.chat import Models, Roles
 
-MWS_GPT_API_ENDPOINT = api_settings.mws_gpt_api_url + "/v1/chat/completions"
+MWS_GPT_API_ENDPOINT = "https://api.gpt.mws.ru/v1/chat/completions"
 
 
 async def call_model(
