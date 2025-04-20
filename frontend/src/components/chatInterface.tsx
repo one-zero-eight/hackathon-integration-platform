@@ -3,11 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { getHistory } from '@/lib/api'
 import { useChatActions } from '@/lib/hooks/useChatActions'
-import { useChatHistory } from '@/lib/hooks/useChatHistory'
 import { useChatHook } from '@/lib/hooks/useChatHook'
 import { useChatSubmit } from '@/lib/hooks/useChatSubmit'
-import { useSendMessage } from '@/lib/hooks/useSendMessage'
-import { useStartChat } from '@/lib/hooks/useStartChat'
 import { useTextArea } from '@/lib/hooks/useTextArea'
 import { ActiveButton } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
@@ -38,7 +35,15 @@ export default function ChatInterface() {
   const [loadingChat, setLoadingChat] = useState<boolean>(true)
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [activeButton, setActiveButton] = useState<ActiveButton>('none')
-
+  const [chatList, setChatList] = useState<number[]>([])
+  const addChat = (id: number) => {
+    setChatList((prev) => {
+      if (prev.includes(id)) return prev
+      const updated = [id, ...prev]
+      localStorage.setItem('chatHistory', JSON.stringify(updated))
+      return updated
+    })
+  }
   const {
     chatID,
     setChatId,
@@ -48,10 +53,30 @@ export default function ChatInterface() {
     setIsLoading,
     handleNewChat,
     handleRegenerateMessage,
-    handleDeleteMessage
-  } = useChatActions()
+    handleDeleteMessage,
+    isAssistantResponding,
+    setIsAssistantResponding
+  } = useChatActions({ setChatList, addChat })
   const isNewChat = !loadingChat && (chatID === undefined || messages.length === 0)
 
+  useEffect(() => {
+    const stored = localStorage.getItem('chatHistory')
+    if (stored) {
+      try {
+        setChatList(JSON.parse(stored))
+      } catch {
+        setChatList([])
+      }
+    }
+  }, [])
+
+  const removeChat = (id: number) => {
+    setChatList((prev) => {
+      const updated = prev.filter((chatId) => chatId !== id)
+      localStorage.setItem('chatHistory', JSON.stringify(updated))
+      return updated
+    })
+  }
   const {
     textareaRef,
     inputContainerRef,
@@ -70,8 +95,6 @@ export default function ChatInterface() {
   const onInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     handleInputChange(e, isLoading)
   }
-  const sendMessageMutation = useSendMessage()
-  const startChatMutation = useStartChat()
 
   useEffect(() => {
     if (chatID && messages.length > 0) {
@@ -168,7 +191,6 @@ export default function ChatInterface() {
   const handleSetLocalStorage = (id: number) => {
     localStorage.setItem('currentChatID', id.toString())
   }
-  const { chatList, addChat } = useChatHistory()
 
   const chatState = useMemo(
     () => ({
@@ -183,7 +205,9 @@ export default function ChatInterface() {
       setIsLoading,
       handleSetLocalStorage,
       setActiveButton,
-      addChat
+      setIsAssistantResponding,
+      addChat,
+      isAssistantResponding
     }),
     [chatID, isNewChat, inputValue]
   )
@@ -197,7 +221,8 @@ export default function ChatInterface() {
     saveSelection: saveSelectionState,
     restoreSelection: restoreSelectionState,
     activeButton,
-    setActiveButton
+    setActiveButton,
+    isAssistantResponding
   })
 
   const loadChatById = async (id: number) => {
@@ -435,7 +460,11 @@ export default function ChatInterface() {
                 <div className="pb-9">
                   <Textarea
                     ref={textareaRef}
-                    placeholder={isLoading ? 'Waiting for response...' : 'Ask Anything'}
+                    placeholder={
+                      isLoading || isAssistantResponding
+                        ? 'Waiting for response...'
+                        : 'Ask Anything'
+                    }
                     className="max-h-[260px] min-h-[24px] w-full resize-none overflow-y-auto rounded-3xl border-0 bg-transparent pt-0 pr-4 pb-0 pl-2 text-base leading-tight text-gray-900 placeholder:text-base placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                     value={inputValue}
                     onChange={onInputChange}
@@ -482,7 +511,7 @@ export default function ChatInterface() {
                           : 'border-black bg-gray-100 text-black',
                         isLoading && 'cursor-not-allowed'
                       )}
-                      disabled={!inputValue.trim() || isLoading}
+                      disabled={!inputValue.trim() || isLoading || isAssistantResponding}
                     >
                       <ArrowUp className={cn('h-4 w-4 transition-colors')} />
                       <span className="sr-only">Submit</span>
