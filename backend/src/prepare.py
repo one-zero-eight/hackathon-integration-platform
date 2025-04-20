@@ -16,7 +16,7 @@ PRE_COMMIT_CONFIG = BASE_DIR / ".pre-commit-config.yaml"
 DEFAULT_DB_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 
 
-def get_settings():
+def get_settings() -> dict | None:
     """
     Load and return the settings from `settings.yaml` if it exists.
     """
@@ -171,9 +171,40 @@ def check_database_access():
     asyncio.run(test_connection())
 
 
+def initialize_vector_index() -> None:
+    """
+    Process documentation and build FAISS index for RAG.
+    """
+    from src.rag.indexer import build_faiss_index
+    from src.rag.loader import load_and_split
+
+    settings = get_settings()
+    doc_path = Path(settings.get("api_settings", {}).get("def_json_documentation_path"))
+    rag_index_path = Path(settings.get("api_settings", {}).get("rag_index_path"))
+    if not doc_path.exists():
+        print(f"❌ Documentation PDF not found at: {doc_path}")
+        return
+    print(f"✅ Documentation PDF found at: {doc_path}")
+
+    if rag_index_path.exists() and any(rag_index_path.iterdir()):
+        print(f"ℹ️ RAG index already exists at: {rag_index_path}, skipping build.")
+        return
+
+    try:
+        print("⚙️ Building vector index from documentation...")
+        chunks = load_and_split(str(doc_path))
+        build_faiss_index(chunks, str(rag_index_path))
+        print(f"✅ Vector index created at `{rag_index_path}` with {len(chunks)} chunks.")
+    except Exception as e:
+        print(f"❌ Failed to build vector index: {e}")
+
+
 def prepare():
+    print("🚀 Running prepare script...")
     ensure_settings_file()
     check_and_generate_session_secret_key()
     check_mws_gpt_api_key()
     ensure_pre_commit_hooks()
+    initialize_vector_index()
     check_database_access()
+    print("✅ All setup steps completed.")

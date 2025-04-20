@@ -5,6 +5,7 @@ from fastapi import FastAPI
 import src.api.logging_  # noqa: F401
 from src.config import api_settings
 from src.db import SQLAlchemyStorage
+from src.rag.retriever import VectorRetriever
 
 
 async def setup_repositories() -> SQLAlchemyStorage:
@@ -21,6 +22,7 @@ async def setup_repositories() -> SQLAlchemyStorage:
 async def lifespan(_app: FastAPI):
     # Application startup
     storage = await setup_repositories()
+    VectorRetriever.init(api_settings.rag_index_path)
     yield
     # Application shutdown
     await storage.close_connection()

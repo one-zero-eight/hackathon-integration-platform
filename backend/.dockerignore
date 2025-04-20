@@ -8,6 +8,7 @@
 !/pyproject.toml
 !/uv.lock
 !logging.yaml
+!/data/
 
 # And ignore cache files in the code
 __pycache__
