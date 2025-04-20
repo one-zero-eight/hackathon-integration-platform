@@ -8,7 +8,7 @@ from src.config import api_settings
 from src.schemas import ViewMessage
 from src.schemas.chat import Models, Roles
 
-MWS_GPT_API_ENDPOINT = "https://api.gpt.mws.ru/v1/chat/completions"
+MWS_GPT_API_ENDPOINT = api_settings.mws_gpt_api_url + "/v1/chat/completions"
 
 
 async def call_model(
@@ -74,7 +74,7 @@ class ConditionalPipeline:
         messages: list[dict[str, str]] = [
             {"role": Roles.SYSTEM.value, "content": self.validation_prompt + " " + self.VALIDATION_SYSTEM_PROMPT},
         ]
-        messages.extend([{"role": msg.role.value, "content": msg.content} for msg in (history or [])])
+        messages.extend([{"role": msg.role.value, "content": msg.message} for msg in (history or [])])
 
         raw = await call_model(messages, self.validation_model, self.validation_temperature)
         try:
@@ -107,7 +107,7 @@ class ConditionalPipeline:
             [
                 {
                     "role": msg.role.value,
-                    "content": msg.content,
+                    "content": msg.message,
                 }
                 for msg in (history or [])
             ]
