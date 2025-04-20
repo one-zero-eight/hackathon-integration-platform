@@ -1,7 +1,7 @@
 $schema: "./settings.schema.yaml"
 api_settings:
   db_url: "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
-  session_secret_key: ""
+  session_secret_key: ""  # use `openssl rand -hex 32` to generate a random key
   mws_gpt_api_key: ""
   mws_gpt_api_url: "https://api.gpt.mws.ru"
   def_json_documentation_path: "data/documentation.md"
