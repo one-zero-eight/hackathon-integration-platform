@@ -2,18 +2,11 @@ export type ActiveButton = 'none' | 'add' | 'deepSearch' | 'think'
 export type MessageType = 'user' | 'system' | 'assistant'
 
 export interface MessageData {
+  id?: number
   dialog_id: number
   role?: MessageType
   message: string
   isLoading?: boolean
-}
-
-export interface ViewMessage {
-  id: string
-  dialog_id: string
-  role: MessageType
-  content: string
-  replyTo: string
 }
 
 export enum Models {

@@ -187,7 +187,7 @@ export default function ChatInterface() {
 
       setHasTyped(false)
       setActiveButton('none')
-      const dialogID = 6
+      const dialogID = 1
       const messageData = {
         dialog_id: dialogID,
         message: userMessage
@@ -217,7 +217,7 @@ export default function ChatInterface() {
                   msg.dialog_id === assistantMessageId
                     ? {
                         ...msg,
-                        message: serverResponse.content,
+                        message: serverResponse.message,
                         isLoading: false
                       }
                     : msg

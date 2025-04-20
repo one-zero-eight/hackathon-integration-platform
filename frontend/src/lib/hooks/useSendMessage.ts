@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { createMessage } from '@/lib/api'
-import { MessageData, ViewMessage } from '@/lib/interfaces'
+import { MessageData } from '@/lib/interfaces'
 
 export const useSendMessage = () => {
-  return useMutation<ViewMessage, Error, MessageData>({ mutationFn: createMessage })
+  return useMutation<MessageData, Error, MessageData>({ mutationFn: createMessage })
 }
