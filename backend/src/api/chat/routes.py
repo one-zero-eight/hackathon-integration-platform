@@ -18,7 +18,7 @@ async def create_message(dialog_id: int = Body(...), message: str = Body(...)) -
         raise HTTPException(404, f"dialog {dialog_id} not found")
 
     history = await messages_repository.get_all_dialog_messages(dialog_id)
-    last_message = history[-1]
+    last_message = history[-1] if history else None
     if last_message and last_message.role == Roles.USER:
         raise HTTPException(400, "last message is already a user message")
 
@@ -37,7 +37,7 @@ async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
         raise HTTPException(404, f"dialog {dialog_id} not found")
 
     history = await messages_repository.get_all_dialog_messages(dialog_id)
-    last_message = history[-1]
+    last_message = history[-1] if history else None
     if last_message and last_message.role != Roles.USER:
         raise HTTPException(400, "last message is already an AI reply")
 
