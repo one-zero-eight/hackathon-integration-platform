@@ -1,34 +1,44 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { getHistory, getMessages } from '@/lib/api'
+import { getHistory } from '@/lib/api'
+import { useChatActions } from '@/lib/hooks/useChatActions'
+import { useChatHistory } from '@/lib/hooks/useChatHistory'
 import { useChatHook } from '@/lib/hooks/useChatHook'
-import { useCreateChat } from '@/lib/hooks/useCreateChat'
-import { useDeleteMessage } from '@/lib/hooks/useDeleteMessage'
-import { useRegenMessage } from '@/lib/hooks/useRegenMessage'
+import { useChatSubmit } from '@/lib/hooks/useChatSubmit'
 import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import { useStartChat } from '@/lib/hooks/useStartChat'
 import { useTextArea } from '@/lib/hooks/useTextArea'
-import { MessageData, MessageType } from '@/lib/interfaces'
+import { ActiveButton } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
 import { ArrowUp, Check, Copy, Menu, PenSquare, Plus, RefreshCcw, Trash2, X } from 'lucide-react'
 import type React from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
 
 export default function ChatInterface() {
-  const [chatID, setChatId] = useState<number | undefined>()
-  const [messages, setMessages] = useState<MessageData[]>([])
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [viewportHeight, setViewportHeight] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const shouldFocusAfterStreamingRef = useRef(false)
   const mainContainerRef = useRef<HTMLDivElement>(null)
   const [loadingChat, setLoadingChat] = useState<boolean>(true)
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
+  const [activeButton, setActiveButton] = useState<ActiveButton>('none')
+
+  const {
+    chatID,
+    setChatId,
+    messages,
+    setMessages,
+    isLoading,
+    setIsLoading,
+    handleNewChat,
+    handleRegenerateMessage,
+    handleDeleteMessage
+  } = useChatActions()
   const isNewChat = !loadingChat && (chatID === undefined || messages.length === 0)
 
   const {
@@ -51,8 +61,6 @@ export default function ChatInterface() {
   }
   const sendMessageMutation = useSendMessage()
   const startChatMutation = useStartChat()
-  const regenMessageMutation = useRegenMessage()
-  const deleteMessageMutation = useDeleteMessage()
 
   useEffect(() => {
     if (chatID && messages.length > 0) {
@@ -146,182 +154,58 @@ export default function ChatInterface() {
     }
   }, [inputValue])
 
-  // ----------------------------------
-  // ------------ CHATS ---------------
-  // ----------------------------------
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!inputValue.trim() || isLoading) return
-
-    setIsLoading(true)
-
-    try {
-      let dialogID = chatID
-
-      if (!dialogID || isNewChat) {
-        const { id } = await startChatMutation.mutateAsync()
-        dialogID = id
-        setChatId(dialogID)
-        handleSetLocalStorage(dialogID)
-      }
-
-      if (!dialogID) return
-
-      const userMessage = inputValue.trim()
-      const userMessageId = Date.now()
-      const assistantMessageId = userMessageId + 1
-
-      // Добавляем сообщение пользователя
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: userMessageId,
-          dialog_id: dialogID,
-          message: userMessage,
-          role: 'user' as MessageType
-        },
-        {
-          id: assistantMessageId,
-          dialog_id: dialogID,
-          message: '',
-          role: 'assistant' as MessageType,
-          isLoading: true
-        }
-      ])
-
-      // Сбрасываем ввод
-      setInputValue('')
-      resetTextareaHeight()
-      setHasTyped(false)
-      setActiveButton('none')
-
-      const sendMsgResponse = await sendMessageMutation.mutateAsync({
-        dialog_id: dialogID,
-        message: userMessage
-      })
-
-      const response = await getMessages(dialogID)
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === userMessageId
-            ? {
-                ...msg,
-                id: sendMsgResponse.id
-              }
-            : msg
-        )
-      )
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === assistantMessageId
-            ? {
-                ...msg,
-                id: response.id,
-                message: response.message,
-                isLoading: false
-              }
-            : msg
-        )
-      )
-    } catch (error) {
-      console.error('Failed to send message:', error)
-    } finally {
-      setIsLoading(false)
-    }
+  const handleSetLocalStorage = (id: number) => {
+    localStorage.setItem('currentChatID', id.toString())
   }
 
-  const {
-    activeButton,
-    setActiveButton,
-    copiedMessageId,
-    handleKeyDown,
-    toggleButton,
-    handleCopy,
-    handleSetLocalStorage
-  } = useChatHook({
+  const chatState = useMemo(
+    () => ({
+      chatID,
+      isNewChat,
+      inputValue,
+      setChatId,
+      setMessages,
+      setInputValue,
+      resetTextareaHeight,
+      setHasTyped,
+      setIsLoading,
+      handleSetLocalStorage,
+      setActiveButton
+    }),
+    [chatID, isNewChat, inputValue]
+  )
+
+  const { handleSubmit } = useChatSubmit(chatState)
+
+  const { copiedMessageId, handleKeyDown, toggleButton, handleCopy } = useChatHook({
     isLoading,
     isMobile,
     handleSubmit,
     saveSelection: saveSelectionState,
-    restoreSelection: restoreSelectionState
+    restoreSelection: restoreSelectionState,
+    activeButton,
+    setActiveButton
   })
+  const { chatList, addChat } = useChatHistory()
 
-  const createChatMutation = useCreateChat((id) => {
-    setChatId(id)
+  const loadChatById = async (id: number) => {
+    setLoadingChat(true)
     localStorage.setItem('currentChatID', id.toString())
-    setMessages([])
-  })
+    setChatId(id)
 
-  const handleNewChat = () => {
-    localStorage.removeItem(`messages:${chatID}`)
-    localStorage.removeItem('currentChatID')
-
-    setMessages([])
-    setChatId(undefined)
-    createChatMutation.mutate()
-  }
-
-  const handleRegenerateMessage = async (message_id: number) => {
-    try {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === message_id
-            ? {
-                ...msg,
-                message: '',
-                isLoading: true
-              }
-            : msg
-        )
-      )
-      setIsLoading(true)
-
-      const regenMessage = await regenMessageMutation.mutateAsync(message_id)
-
-      console.log(regenMessage)
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === message_id
-            ? {
-                ...msg,
-                id: regenMessage.id,
-                message: regenMessage.message,
-                isLoading: false
-              }
-            : msg
-        )
-      )
-    } catch (error) {
-      console.error('Error regenerating message:', error)
-      setIsLoading(false)
-    } finally {
-      setIsLoading(false)
+    const cachedMessages = localStorage.getItem(`messages:${id}`)
+    if (cachedMessages) {
+      setMessages(JSON.parse(cachedMessages))
+    } else {
+      try {
+        const history = await getHistory(id, 0)
+        setMessages(history)
+      } catch {
+        setMessages([])
+      }
     }
-  }
 
-  const handleDeleteMessage = async (userMessageId: number, assistantMessageId: number) => {
-    try {
-      await deleteMessageMutation.mutateAsync(userMessageId)
-
-      setMessages((prev) => {
-        const updatedMessages = prev.filter(
-          (message) => message.id !== userMessageId && message.id !== assistantMessageId
-        )
-
-        if (updatedMessages.length <= 0) {
-          localStorage.removeItem(`messages:${chatID}`)
-        }
-
-        return updatedMessages
-      })
-    } catch (error) {
-      console.error('Failed to delete messages:', error)
-    }
+    setLoadingChat(false)
   }
   return (
     <div className="flex">
@@ -333,15 +217,16 @@ export default function ChatInterface() {
           )}
         >
           <div className="w-[300px] space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {chatList.map((id) => (
               <p
-                key={i}
+                key={id}
                 className={cn(
                   'mx-2 cursor-pointer rounded-md px-2 py-2 text-xl hover:bg-gray-300',
-                  i == 0 && 'bg-gray-400'
+                  chatID === id && 'bg-gray-400'
                 )}
+                onClick={() => loadChatById(id)}
               >
-                Menu Item {i + 1}
+                Chat - {id}
               </p>
             ))}
           </div>

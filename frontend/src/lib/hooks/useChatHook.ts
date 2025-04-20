@@ -6,15 +6,18 @@ export function useChatHook({
   isMobile,
   handleSubmit,
   saveSelection,
-  restoreSelection
+  restoreSelection,
+  activeButton,
+  setActiveButton
 }: {
   isLoading: boolean
   isMobile: boolean
   handleSubmit: (e?: any) => void
   saveSelection: () => void
   restoreSelection: () => void
+  activeButton: ActiveButton
+  setActiveButton: React.Dispatch<React.SetStateAction<ActiveButton>>
 }) {
-  const [activeButton, setActiveButton] = useState<ActiveButton>('none')
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null)
 
   const handleKeyDown = useCallback(
@@ -52,16 +55,12 @@ export function useChatHook({
     }
   }, [])
 
-  const handleSetLocalStorage = useCallback((id: number) => {
-    localStorage.setItem('currentChatID', id.toString())
-  }, [])
   return {
     handleKeyDown,
     toggleButton,
     activeButton,
     setActiveButton,
     copiedMessageId,
-    handleCopy,
-    handleSetLocalStorage
+    handleCopy
   }
 }
