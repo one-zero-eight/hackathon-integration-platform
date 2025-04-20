@@ -9,12 +9,18 @@ router = APIRouter(tags=["dialog"], prefix="/dialog", route_class=AutoDeriveResp
 
 @router.post("/create_dialog")
 async def new_dialog() -> ViewDialog:
+    """
+    Create a new empty dialog.
+    """
     created_dialog = await dialog_repository.create_dialog()
     return created_dialog
 
 
 @router.get("/get_dialog")
 async def get_dialog(dialog_id: int) -> ViewDialog:
+    """
+    Get a dialog by its ID.
+    """
     dialog = await dialog_repository.get_dialog(dialog_id)
     if dialog is None:
         raise HTTPException(status_code=404, detail="Dialog not found")
@@ -23,6 +29,9 @@ async def get_dialog(dialog_id: int) -> ViewDialog:
 
 @router.get("/get_existing")
 async def get_existing() -> list[ViewDialog]:
+    """
+    Get all existing dialogs.
+    """
     dialogs = await dialog_repository.get_all_dialogs()
     return dialogs
 
@@ -42,6 +51,9 @@ async def get_history(dialog_id: int, amount: int | None = None) -> list[ViewMes
 
 @router.delete("/delete_dialog")
 async def delete_dialog(dialog_id: int) -> ViewDialog:
+    """
+    Delete a dialog by its ID.
+    """
     dialog = await dialog_repository.delete_dialog(dialog_id)
     if dialog is None:
         raise HTTPException(404, f"dialog {dialog_id} not found")

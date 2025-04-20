@@ -14,7 +14,7 @@ MWS_GPT_API_EMBEDDING_ENDPOINT = api_settings.mws_gpt_api_url + "/v1/embeddings"
 
 class MwsEmbeddings(Embeddings):
     """
-    LangChain-compatible Embeddings that POSTs to /v1/embeddings API.
+    LangChain-compatible Embeddings that POSTs to the given endpoint. Uses MWS GPT API and BGE M3 model by default.
     """
 
     def __init__(

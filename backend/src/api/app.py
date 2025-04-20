@@ -24,7 +24,7 @@ app.add_middleware(
 
 from src.api.chat.routes import router as chat_router  # noqa: E402
 from src.api.dialog.routes import router as dialog_router  # noqa: E402
-from src.api.messages.routes import router as messages_router  # noqa: E402
+from src.api.message.routes import router as messages_router  # noqa: E402
 
 app.include_router(messages_router)
 app.include_router(dialog_router)
