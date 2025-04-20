@@ -14,7 +14,6 @@ import { WavyBackground } from './ui/wavy-background'
 export default function ChatInterface() {
   const [chatID, setChatId] = useState<number | undefined>()
   const [messages, setMessages] = useState<MessageData[]>([])
-  const [isNewChat, setNewChat] = useState<boolean>(true)
   const [inputValue, setInputValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -28,6 +27,8 @@ export default function ChatInterface() {
   const inputContainerRef = useRef<HTMLDivElement>(null)
   const shouldFocusAfterStreamingRef = useRef(false)
   const mainContainerRef = useRef<HTMLDivElement>(null)
+  const [loadingChat, setLoadingChat] = useState<boolean>(true)
+  const isNewChat = !loadingChat && (chatID === undefined || messages.length === 0)
   const selectionStateRef = useRef<{ start: number | null; end: number | null }>({
     start: null,
     end: null
@@ -45,7 +46,6 @@ export default function ChatInterface() {
       if (storedChatId) {
         const parsedId = Number(storedChatId)
         setChatId(parsedId)
-        setNewChat(false)
 
         const cachedMessages = localStorage.getItem(`messages:${parsedId}`)
         if (cachedMessages) {
@@ -63,6 +63,8 @@ export default function ChatInterface() {
           }
         }
       }
+
+      setLoadingChat(false)
     }
 
     restoreChat()
@@ -126,6 +128,7 @@ export default function ChatInterface() {
       resetTextareaHeight()
     }
   }, [inputValue])
+
   // Save the current selection state
   const saveSelectionState = () => {
     if (textareaRef.current) {
@@ -218,7 +221,6 @@ export default function ChatInterface() {
         dialogID = id
         setChatId(dialogID)
         handleSetLocalStorage(dialogID)
-        setNewChat(false)
       }
 
       if (!dialogID) return
@@ -327,7 +329,6 @@ export default function ChatInterface() {
       console.log('New chat created with ID:', data.id)
       setChatId(data.id)
       handleSetLocalStorage(data.id)
-      setNewChat(true)
     },
     onError: (error) => {
       console.error('Error creating new chat:', error)
@@ -336,10 +337,12 @@ export default function ChatInterface() {
       setIsLoading(false)
     }
   })
-
   const handleNewChat = () => {
     localStorage.removeItem(`messages:${chatID}`)
     localStorage.removeItem('currentChatID')
+
+    setMessages([])
+    setChatId(undefined)
     createChatMutation.mutate()
   }
 
@@ -350,7 +353,7 @@ export default function ChatInterface() {
   const resetTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = '24px' // Your default height
+      textareaRef.current.style.height = '24px'
     }
   }
   return (
@@ -461,92 +464,96 @@ export default function ChatInterface() {
         </div>
       </div>
 
-      <div
-        className={cn(
-          'fixed right-0 bottom-0 left-0 p-4 transition-all duration-500 ease-in-out',
-          isNewChat && 'bottom-1/2'
-        )}
-      >
-        {isNewChat && (
-          <h1 className="mb-4 text-center text-lg md:text-xl lg:text-3xl xl:text-4xl">
-            Hello how can i help you ?
-          </h1>
-        )}
-        <form
-          onSubmit={handleSubmit}
+      {!loadingChat ? (
+        <div
           className={cn(
-            'mx-auto w-[90vw] transition-all duration-500 ease-in md:w-2xl lg:w-4xl xl:w-6xl',
-            isNewChat && 'md:w-xl lg:w-2xl xl:w-4xl'
+            'fixed right-0 bottom-0 left-0 p-4 transition-all duration-500 ease-in-out',
+            isNewChat && 'bottom-1/2'
           )}
         >
-          <div
-            ref={inputContainerRef}
+          {isNewChat && (
+            <h1 className="mb-4 text-center text-lg md:text-xl lg:text-3xl xl:text-4xl">
+              Hello how can i help you ?
+            </h1>
+          )}
+          <form
+            onSubmit={handleSubmit}
             className={cn(
-              'relative w-full cursor-text rounded-3xl border border-[#8A8D8F] bg-[#EFEFEF] p-3',
-              isLoading && 'opacity-80'
+              'mx-auto w-[90vw] transition-all duration-500 ease-in md:w-2xl lg:w-4xl xl:w-6xl',
+              isNewChat && 'md:w-xl lg:w-2xl xl:w-4xl'
             )}
-            onClick={handleInputContainerClick}
           >
-            <div className="pb-9">
-              <Textarea
-                ref={textareaRef}
-                placeholder={isLoading ? 'Waiting for response...' : 'Ask Anything'}
-                className="max-h-[260px] min-h-[24px] w-full resize-none overflow-y-auto rounded-3xl border-0 bg-transparent pt-0 pr-4 pb-0 pl-2 text-base leading-tight text-gray-900 placeholder:text-base placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                onFocus={() => {
-                  // Ensure the textarea is scrolled into view when focused
-                  if (textareaRef.current) {
-                    textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                  }
-                }}
-              />
-            </div>
+            <div
+              ref={inputContainerRef}
+              className={cn(
+                'relative w-full cursor-text rounded-3xl border border-[#8A8D8F] bg-[#EFEFEF] p-3',
+                isLoading && 'opacity-80'
+              )}
+              onClick={handleInputContainerClick}
+            >
+              <div className="pb-9">
+                <Textarea
+                  ref={textareaRef}
+                  placeholder={isLoading ? 'Waiting for response...' : 'Ask Anything'}
+                  className="max-h-[260px] min-h-[24px] w-full resize-none overflow-y-auto rounded-3xl border-0 bg-transparent pt-0 pr-4 pb-0 pl-2 text-base leading-tight text-gray-900 placeholder:text-base placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => {
+                    // Ensure the textarea is scrolled into view when focused
+                    if (textareaRef.current) {
+                      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }
+                  }}
+                />
+              </div>
 
-            <div className="absolute right-3 bottom-3 left-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+              <div className="absolute right-3 bottom-3 left-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className={cn(
+                        'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
+                        activeButton === 'add'
+                          ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
+                          : 'border-gray-400 bg-gray-100',
+                        isLoading && 'cursor-not-allowed opacity-50'
+                      )}
+                      onClick={() => toggleButton('add')}
+                      disabled={isLoading}
+                    >
+                      <Plus className={cn('h-4 w-4 transition-colors')} />
+                      <span className="sr-only">Add</span>
+                    </Button>
+                  </div>
+
                   <Button
-                    type="button"
+                    type="submit"
                     variant="outline"
                     size="icon"
                     className={cn(
                       'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
-                      activeButton === 'add'
+                      hasTyped
                         ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
-                        : 'border-gray-400 bg-gray-100',
-                      isLoading && 'cursor-not-allowed opacity-50'
+                        : 'border-black bg-gray-100 text-black',
+                      isLoading && 'cursor-not-allowed'
                     )}
-                    onClick={() => toggleButton('add')}
-                    disabled={isLoading}
+                    disabled={!inputValue.trim() || isLoading}
                   >
-                    <Plus className={cn('h-4 w-4 transition-colors')} />
-                    <span className="sr-only">Add</span>
+                    <ArrowUp className={cn('h-4 w-4 transition-colors')} />
+                    <span className="sr-only">Submit</span>
                   </Button>
                 </div>
-
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="icon"
-                  className={cn(
-                    'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
-                    hasTyped
-                      ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
-                      : 'border-black bg-gray-100 text-black',
-                    isLoading && 'cursor-not-allowed'
-                  )}
-                  disabled={!inputValue.trim() || isLoading}
-                >
-                  <ArrowUp className={cn('h-4 w-4 transition-colors')} />
-                  <span className="sr-only">Submit</span>
-                </Button>
               </div>
             </div>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      ) : (
+        <div>Loading</div>
+      )}
     </WavyBackground>
   )
 }
