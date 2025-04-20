@@ -9,6 +9,17 @@ export interface MessageData {
   isLoading?: boolean
 }
 
+export interface ViewMessage {
+  id: string
+  dialog_id: string
+  role: MessageType
+  content: string
+  replyTo: string
+}
+
+export interface NewChat {
+  id: number
+}
 export enum Models {
   DEEPSEEK_DISTILLED = 'deepseek-r1-distill-qwen-32b',
   QWEN_2_5_32 = 'qwen2.5-32b-instruct',
