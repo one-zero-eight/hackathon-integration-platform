@@ -1,14 +1,16 @@
 import json
+import re
 from typing import Any
 
 from fastapi import HTTPException
 from httpx import AsyncClient, HTTPStatusError, Timeout
 
 from src.config import api_settings
+from src.rag import VectorRetriever
 from src.schemas import ViewMessage
 from src.schemas.chat import Models, Roles
 
-MWS_GPT_API_ENDPOINT = "https://api.gpt.mws.ru/v1/chat/completions"
+MWS_GPT_API_ENDPOINT = api_settings.mws_gpt_api_url + "/v1/chat/completions"
 
 
 async def call_model(
@@ -71,16 +73,33 @@ class ConditionalPipeline:
         self.main_temperature = main_temperature
 
     async def validate(self, history: list[ViewMessage] | None = None) -> dict[str, Any]:
+        user_query: str = history[-1].message if history else ""
+        doc_ctx: str = VectorRetriever.retrieve(user_query)
+        system_content: str = (
+            "You have access to the following documentation. Use that documentation for checking if dialog meets the requirements:\n\n"
+            f"{doc_ctx}\n\n"
+            "You must strictly follow following validation instructions:\n"
+            f"{self.validation_prompt} {self.VALIDATION_SYSTEM_PROMPT}"
+        )
+
         messages: list[dict[str, str]] = [
-            {"role": Roles.SYSTEM.value, "content": self.validation_prompt + " " + self.VALIDATION_SYSTEM_PROMPT},
+            {"role": Roles.SYSTEM.value, "content": system_content},
         ]
         messages.extend([{"role": msg.role.value, "content": msg.message} for msg in (history or [])])
 
         raw = await call_model(messages, self.validation_model, self.validation_temperature)
+
+        pattern = r"```(?:json)?\s*(\{.*?\})\s*```"
+        match = re.search(pattern, raw, re.DOTALL)
+        if match:
+            json_str = match.group(1).strip()
+        else:
+            json_str = raw.strip()
+
         try:
-            return json.loads(raw)
+            return json.loads(json_str)
         except json.JSONDecodeError:
-            return {"is_valid": False, "message": f"Invalid JSON from validator: {raw}"}
+            return {"is_valid": False, "message": f"Invalid JSON from validator: {json_str}"}
 
     async def run(
         self,
@@ -98,10 +117,16 @@ class ConditionalPipeline:
         if not result.get("is_valid"):
             return result.get("message", "Validation failed without message.")
 
-        messages: list[dict[str, str]] = []
+        user_query: str = history[-1].message if history else ""
+        doc_ctx: str = VectorRetriever.retrieve(user_query)
+        final_system_prompt: str = (
+            "You have access to the following documentation:\n\n"
+            f"{doc_ctx}\n\n"
+            "Answer instructions:\n"
+            f"{main_system_prompt}"
+        )
 
-        if main_system_prompt:
-            messages.append({"role": Roles.SYSTEM.value, "content": main_system_prompt})
+        messages: list[dict[str, str]] = [{"role": Roles.SYSTEM.value, "content": final_system_prompt}]
 
         messages.extend(
             [

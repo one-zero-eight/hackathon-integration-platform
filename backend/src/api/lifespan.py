@@ -5,7 +5,7 @@ from fastapi import FastAPI
 import src.api.logging_  # noqa: F401
 from src.config import api_settings
 from src.db import SQLAlchemyStorage
-from src.rag.retriever import VectorRetriever
+from src.rag import VectorRetriever
 
 
 async def setup_repositories() -> SQLAlchemyStorage:

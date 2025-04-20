@@ -175,19 +175,18 @@ def initialize_vector_index() -> None:
     """
     Process documentation and build FAISS index for RAG.
     """
-    from src.rag.indexer import build_faiss_index
-    from src.rag.loader import load_and_split
+    from src.rag import build_faiss_index, load_and_split
 
     settings = get_settings()
     doc_path = Path(settings.get("api_settings", {}).get("def_json_documentation_path"))
     rag_index_path = Path(settings.get("api_settings", {}).get("rag_index_path"))
     if not doc_path.exists():
-        print(f"❌ Documentation PDF not found at: {doc_path}")
+        print(f"❌ Documentation PDF/DOCX not found at: {doc_path}")
         return
-    print(f"✅ Documentation PDF found at: {doc_path}")
+    print(f"✅ Documentation PDF/DOCX found at: {doc_path}")
 
     if rag_index_path.exists() and any(rag_index_path.iterdir()):
-        print(f"ℹ️ RAG index already exists at: {rag_index_path}, skipping build.")
+        print(f"✅ RAG index already exists at: {rag_index_path}, skipping build.")
         return
 
     try:
