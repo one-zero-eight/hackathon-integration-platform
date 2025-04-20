@@ -1,6 +1,6 @@
 'use client'
 import type React from 'react'
-import { ArrowUp, Check, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
+import { ArrowUp, Check, Copy, Menu, PenSquare, Plus, RefreshCcw, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -12,6 +12,7 @@ import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import { useStartChat } from '@/lib/hooks/useStartChat'
 import { useCreateChat } from '@/lib/hooks/useCreateChat'
 import { useRegenMessage } from '@/lib/hooks/useRegenMessage'
+import { useDeleteMessage } from '@/lib/hooks/useDeleteMessage'
 import Markdown from './MarkDown'
 
 export default function ChatInterface() {
@@ -40,6 +41,7 @@ export default function ChatInterface() {
   const sendMessageMutation = useSendMessage()
   const startChatMutation = useStartChat()
   const regenMessageMutation = useRegenMessage()
+  const deleteMessageMutation = useDeleteMessage()
 
   useEffect(() => {
     if (chatID && messages.length > 0) {
@@ -147,7 +149,6 @@ export default function ChatInterface() {
   }
 
   // Restore the saved selection state
-
   const restoreSelectionState = () => {
     const textarea = textareaRef.current
     const { start, end } = selectionStateRef.current
@@ -252,12 +253,23 @@ export default function ChatInterface() {
       setHasTyped(false)
       setActiveButton('none')
 
-      await sendMessageMutation.mutateAsync({
+      const sendMsgResponse = await sendMessageMutation.mutateAsync({
         dialog_id: dialogID,
         message: userMessage
       })
 
       const response = await getMessages(dialogID)
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === userMessageId
+            ? {
+                ...msg,
+                id: sendMsgResponse.id
+              }
+            : msg
+        )
+      )
 
       setMessages((prev) =>
         prev.map((msg) =>
@@ -382,6 +394,28 @@ export default function ChatInterface() {
     }
   }
 
+  const handleDeleteMessage = async (userMessageId: number, assistantMessageId: number) => {
+    try {
+      await Promise.all([
+        deleteMessageMutation.mutateAsync(userMessageId),
+        deleteMessageMutation.mutateAsync(assistantMessageId)
+      ])
+
+      setMessages((prev) => {
+        const updatedMessages = prev.filter(
+          (message) => message.id !== userMessageId && message.id !== assistantMessageId
+        )
+
+        if (updatedMessages.length <= 0) {
+          localStorage.removeItem(`messages:${chatID}`)
+        }
+
+        return updatedMessages
+      })
+    } catch (error) {
+      console.error('Failed to delete messages:', error)
+    }
+  }
   return (
     <WavyBackground
       ref={mainContainerRef}
@@ -488,6 +522,22 @@ export default function ChatInterface() {
                       ) : (
                         <Copy className="h-4 w-4" />
                       )}
+                    </button>
+
+                    <button
+                      className={cn(
+                        'cursor-pointer text-black transition-colors hover:text-gray-600'
+                      )}
+                      onClick={() => {
+                        const userMessageId = messages[index - 1]?.id
+                        console.log(message)
+                        const assistantMessageId = message.id
+                        userMessageId && assistantMessageId
+                          ? handleDeleteMessage(userMessageId, assistantMessageId)
+                          : console.error('Message ids are not found')
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 )}
