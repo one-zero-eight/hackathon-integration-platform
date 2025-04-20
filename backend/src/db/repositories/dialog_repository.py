@@ -20,11 +20,12 @@ class DialogRepository:
 
     async def create_dialog(self) -> ViewDialog:
         async with self._create_session() as session:
-            query = insert(Dialog).values().returning(Dialog)
-            obj = await session.scalar(query)
-            dialog = ViewDialog.model_validate(obj)
+            query = insert(Dialog).values().returning(Dialog.id)
+            obj = await session.execute(query)
+            dialog_id = obj.scalar_one()
+            created_dialog = ViewDialog.model_validate(ViewDialog(id=dialog_id))
             await session.commit()
-            return dialog
+            return created_dialog
 
     async def get_dialog(self, dialog_id: int) -> ViewDialog | None:
         async with self._create_session() as session:
