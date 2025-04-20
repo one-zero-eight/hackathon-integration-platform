@@ -81,6 +81,8 @@ async def get_messages(dialog_id: int, amount: int = 0) -> list[ViewMessage]:
 @router.delete("/chat/delete_message")
 async def delete_message(message_id: int) -> None:
     message = await messages_repository.get_message_by_id(message_id)
+    if not message:
+        raise HTTPException(404, f"message {message_id} not found")
     if message.role != Roles.USER:
         raise HTTPException(400, "You can only delete messages from user")
     return await messages_repository.delete_message(message_id)
