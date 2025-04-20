@@ -23,7 +23,7 @@ class ApiSettings(BaseModel):
     mws_gpt_api_url: str = Field(...)
     "API URL of MTS MWS GPT"
     def_json_documentation_path: str = Field(..., example="data/documentation.pdf")
-    "Path to definition json pdf/docx documentation"
+    "Path to definition json pdf/docx/md documentation"
     rag_index_path: str = Field(..., example="data/vector.index")
     "Path to indexed documentation"
 

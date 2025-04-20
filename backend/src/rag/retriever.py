@@ -14,7 +14,7 @@ class VectorRetriever:
         cls._index = load_faiss_index(index_path)
 
     @classmethod
-    def retrieve(cls, query: str, k: int = 4) -> str:
+    def retrieve(cls, query: str, k: int = 25) -> str:
         """
         Retrieve the k most similar document snippets to the given query.
         """
