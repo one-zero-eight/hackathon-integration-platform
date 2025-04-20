@@ -1,10 +1,10 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { getMessages } from '@/lib/api'
-import { useSendMessage } from '@/lib/hooks/useSendMessage'
+import { createMessage, createNewChat, getDialoge, getMessages } from '@/lib/api'
 import { ActiveButton, MessageData, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
+import { useMutation } from '@tanstack/react-query'
 import { ArrowUp, Check, Copy, Menu, PenSquare, Plus, RefreshCcw } from 'lucide-react'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
@@ -12,6 +12,7 @@ import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
 
 export default function ChatInterface() {
+  const [chatID, setChatId] = useState<number | undefined>()
   const [messages, setMessages] = useState<MessageData[]>([])
   const [isNewChat, setNewChat] = useState<boolean>(true)
   const [inputValue, setInputValue] = useState('')
@@ -32,7 +33,40 @@ export default function ChatInterface() {
     end: null
   })
 
-  const { mutate: sendMessage } = useSendMessage()
+  useEffect(() => {
+    if (chatID && messages.length > 0) {
+      localStorage.setItem(`messages:${chatID}`, JSON.stringify(messages))
+    }
+  }, [messages, chatID])
+
+  useEffect(() => {
+    const restoreChat = async () => {
+      const storedChatId = localStorage.getItem('currentChatID')
+      if (storedChatId) {
+        const parsedId = Number(storedChatId)
+        setChatId(parsedId)
+        setNewChat(false)
+
+        const cachedMessages = localStorage.getItem(`messages:${parsedId}`)
+        if (cachedMessages) {
+          try {
+            setMessages(JSON.parse(cachedMessages))
+          } catch {
+            console.warn('Could not parse messages from localStorage')
+          }
+        } else {
+          try {
+            const history = await getDialoge(parsedId, 0)
+            setMessages(history)
+          } catch (err) {
+            console.error('Error fetching chat history:', err)
+          }
+        }
+      }
+    }
+
+    restoreChat()
+  }, [])
 
   useEffect(() => {
     const checkMobileAndViewport = () => {
@@ -161,86 +195,86 @@ export default function ChatInterface() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    if (isNewChat) setNewChat(false)
+  const startChatMutation = useMutation({
+    mutationFn: createNewChat
+  })
 
+  const sendMessageMutation = useMutation({
+    mutationFn: (data: { dialog_id: number; message: string }) => createMessage(data)
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (inputValue.trim() && !isLoading) {
+
+    if (!inputValue.trim() || isLoading) return
+
+    setIsLoading(true)
+
+    try {
+      let dialogID = chatID
+
+      // ✅ Create new chat if needed
+      if (!dialogID || isNewChat) {
+        const { id } = await startChatMutation.mutateAsync()
+        dialogID = id
+        setChatId(dialogID)
+        handleSetLocalStorage(dialogID)
+        setNewChat(false)
+      }
+
+      if (!dialogID) return
+
       const userMessage = inputValue.trim()
       const userMessageId = Date.now()
+      const assistantMessageId = userMessageId + 1
 
       // Добавляем сообщение пользователя
       setMessages((prev) => [
         ...prev,
         {
-          dialog_id: userMessageId,
+          id: userMessageId,
+          dialog_id: dialogID,
           message: userMessage,
           role: 'user' as MessageType
+        },
+        {
+          id: assistantMessageId,
+          dialog_id: dialogID,
+          message: '',
+          role: 'assistant' as MessageType,
+          isLoading: true
         }
       ])
 
       // Сбрасываем ввод
+
       setInputValue('')
       resetTextareaHeight()
       setHasTyped(false)
       setActiveButton('none')
 
-      const dialogID = 1
-
-      const messageData = {
+      await sendMessageMutation.mutateAsync({
         dialog_id: dialogID,
         message: userMessage
-      }
+      })
 
-      // Устанавливаем состояние загрузки
-      setIsLoading(true)
+      const response = await getMessages(dialogID)
 
-      try {
-        sendMessage(messageData, {
-          onSuccess: async () => {
-            try {
-              const tempAssistantMessageId = Date.now() + 1
-
-              setMessages((prev) => [
-                ...prev,
-                {
-                  id: tempAssistantMessageId,
-                  dialog_id: dialogID,
-                  message: '',
-                  role: 'assistant' as MessageType,
-                  isLoading: true
-                }
-              ])
-
-              const serverResponse = await getMessages(dialogID)
-
-              console.log(serverResponse)
-
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.dialog_id === tempAssistantMessageId
-                    ? {
-                        ...msg,
-                        id: serverResponse.id,
-                        message: serverResponse.message,
-                        isLoading: false
-                      }
-                    : msg
-                )
-              )
-            } catch (error) {
-              console.error('Error while receiving message to the server:', error)
-            }
-          },
-          onError: (error) => {
-            console.error('OnError while sending the message:', error)
-          }
-        })
-      } catch (error) {
-        console.error('Error while sending the message:', error)
-      } finally {
-        setIsLoading(false)
-      }
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                message: response.content,
+                isLoading: false
+              }
+            : msg
+        )
+      )
+    } catch (error) {
+      console.error('Failed to send message:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -283,9 +317,34 @@ export default function ChatInterface() {
     }
   }
 
+  const createChatMutation = useMutation({
+    mutationFn: createNewChat,
+    onMutate: () => {
+      setIsLoading(true)
+      setMessages([]) // clear old messages
+    },
+    onSuccess: (data) => {
+      console.log('New chat created with ID:', data.id)
+      setChatId(data.id)
+      handleSetLocalStorage(data.id)
+      setNewChat(true)
+    },
+    onError: (error) => {
+      console.error('Error creating new chat:', error)
+    },
+    onSettled: () => {
+      setIsLoading(false)
+    }
+  })
+
   const handleNewChat = () => {
-    setMessages([])
-    setNewChat(true)
+    localStorage.removeItem(`messages:${chatID}`)
+    localStorage.removeItem('currentChatID')
+    createChatMutation.mutate()
+  }
+
+  const handleSetLocalStorage = (id: number) => {
+    localStorage.setItem('currentChatID', id.toString())
   }
 
   const resetTextareaHeight = () => {
@@ -333,7 +392,7 @@ export default function ChatInterface() {
 
       <div
         ref={chatContainerRef}
-        className="scrollbar-none flex-grow overflow-y-auto px-4 pt-12 pb-32"
+        className="scrollbar-none flex-grow overflow-y-auto px-4 pt-24 pb-32"
       >
         <div className="mx-auto flex w-[90vw] flex-col gap-4 md:w-2xl lg:w-4xl xl:w-6xl">
           {messages.map((message, index) => {
@@ -381,13 +440,13 @@ export default function ChatInterface() {
                       <RefreshCcw className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleCopy(message.message, message.id!)}
+                      onClick={() => handleCopy(message.message, message.dialog_id)}
                       className={cn(
                         'hover:text-gray- cursor-pointer text-black transition-colors',
-                        copiedMessageId === message.id && 'animate-pulse text-green-500'
+                        copiedMessageId === message.dialog_id && 'animate-pulse text-green-500'
                       )}
                     >
-                      {copiedMessageId === message.id ? (
+                      {copiedMessageId === message.dialog_id ? (
                         <Check className="h-4 w-4" />
                       ) : (
                         <Copy className="h-4 w-4" />
