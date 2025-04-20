@@ -20,6 +20,12 @@ class ApiSettings(BaseModel):
     session_secret_key: SecretStr = Field(..., example="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
     mws_gpt_api_key: SecretStr = Field(..., example="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
     "API key of MTS MWS GPT"
+    mws_gpt_api_url: str = Field(...)
+    "API URL of MTS MWS GPT"
+    def_json_documentation_path: str = Field(..., example="data/documentation.pdf")
+    "Path to definition json pdf documentation"
+    rag_index_path: str = Field(..., example="data/vector.index")
+    "Path to indexed documentation"
 
 
 class Settings(BaseModel):

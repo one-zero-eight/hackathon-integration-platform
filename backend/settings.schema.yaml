@@ -24,10 +24,25 @@ $defs:
         example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         title: MWS API KEY
         type: string
+      def_json_documentation_path:
+        default: "data/documentation.pdf"
+        example: data/documentation.pdf
+        title: definite json documentation
+        type: string
+      rag_index_path:
+        default: "data/vector.index"
+        example: data/vector.index
+        title: RAG index path
+        type: string
+      mws_gpt_api_url:
+        title: MWS API URL
+        type: string
     required:
     - db_url
     - session_secret_key
     - mws_gpt_api_key
+    - def_json_documentation_path
+    - rag_index_path
     title: ApiSettings
     type: object
 properties:

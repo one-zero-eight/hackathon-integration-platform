@@ -3,3 +3,6 @@ api_settings:
   db_url: null
   session_secret_key: null
   mws_gpt_api_key: null
+  mws_gpt_api_url: null
+  def_json_documentation_path: null
+  rag_index_path: null
