@@ -10,10 +10,10 @@ TEST_VALIDATION_PROMPT = """
 Check if you have enough data to provide answer to user. Prompt user if you don't have enough data. Do not assume anything.
 """.strip()
 
-router = APIRouter(tags=["chat"], route_class=AutoDeriveResponsesAPIRoute)
+router = APIRouter(tags=["chat"], prefix="/chat", route_class=AutoDeriveResponsesAPIRoute)
 
 
-@router.post("/chat/create_message")
+@router.post("/create_message")
 async def create_message(dialog_id: int = Body(...), message: str = Body(...)) -> ViewMessage:
     if await dialog_repository.get_dialog(dialog_id) is None:
         raise HTTPException(404, f"dialog {dialog_id} not found")
@@ -32,7 +32,7 @@ async def create_message(dialog_id: int = Body(...), message: str = Body(...)) -
     return created
 
 
-@router.get("/chat/chat_completion")
+@router.get("/chat_completion")
 async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
     if await dialog_repository.get_dialog(dialog_id) is None:
         raise HTTPException(404, f"dialog {dialog_id} not found")
@@ -63,7 +63,7 @@ async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
     return ViewMessage.model_validate(saved_assistant)
 
 
-@router.get("/chat/get_history")
+@router.get("/get_history")
 async def get_messages(dialog_id: int, amount: int = 0) -> list[ViewMessage]:
     """
     Get n last messages from dialog. To get all messages, set amount to 0.
@@ -80,7 +80,7 @@ async def get_messages(dialog_id: int, amount: int = 0) -> list[ViewMessage]:
     return messages
 
 
-@router.delete("/chat/delete_message")
+@router.delete("/delete_message")
 async def delete_message(message_id: int) -> None:
     message = await messages_repository.get_message_by_id(message_id)
     if not message:
@@ -90,7 +90,7 @@ async def delete_message(message_id: int) -> None:
     return await messages_repository.delete_message(message_id)
 
 
-@router.post("/chat/regenerate")
+@router.post("/regenerate")
 async def regenerate_response(message_id: int) -> ViewMessage:
     response = await messages_repository.get_message_by_id(message_id)
     if response is None:

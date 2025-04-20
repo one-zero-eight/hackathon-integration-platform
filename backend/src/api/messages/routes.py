@@ -4,16 +4,16 @@ from fastapi_derive_responses import AutoDeriveResponsesAPIRoute
 from src.db.repositories import messages_repository
 from src.schemas import CreateMessage, ViewMessage
 
-router = APIRouter(tags=["messages"], route_class=AutoDeriveResponsesAPIRoute)
+router = APIRouter(tags=["messages"], prefix="/messages", route_class=AutoDeriveResponsesAPIRoute)
 
 
-@router.post("/messages/create")
+@router.post("/create")
 async def create_message(message: CreateMessage) -> ViewMessage:
     created = await messages_repository.create_message(message)
     return created
 
 
-@router.get("/messages/get")
+@router.get("/get")
 async def get_message(message_id: int) -> ViewMessage:
     message = await messages_repository.get_message_by_id(message_id)
     if not message:
@@ -21,7 +21,7 @@ async def get_message(message_id: int) -> ViewMessage:
     return message
 
 
-@router.delete("/messages/delete")
+@router.delete("/delete")
 async def delete_message(message_id: int) -> ViewMessage:
     message = await messages_repository.delete_message(message_id)
     if not message:
