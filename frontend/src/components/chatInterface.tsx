@@ -157,6 +157,7 @@ export default function ChatInterface() {
   const handleSetLocalStorage = (id: number) => {
     localStorage.setItem('currentChatID', id.toString())
   }
+  const { chatList, addChat } = useChatHistory()
 
   const chatState = useMemo(
     () => ({
@@ -170,7 +171,8 @@ export default function ChatInterface() {
       setHasTyped,
       setIsLoading,
       handleSetLocalStorage,
-      setActiveButton
+      setActiveButton,
+      addChat
     }),
     [chatID, isNewChat, inputValue]
   )
@@ -186,16 +188,19 @@ export default function ChatInterface() {
     activeButton,
     setActiveButton
   })
-  const { chatList, addChat } = useChatHistory()
 
   const loadChatById = async (id: number) => {
     setLoadingChat(true)
-    localStorage.setItem('currentChatID', id.toString())
     setChatId(id)
+    localStorage.setItem('currentChatID', id.toString())
 
     const cachedMessages = localStorage.getItem(`messages:${id}`)
     if (cachedMessages) {
-      setMessages(JSON.parse(cachedMessages))
+      try {
+        setMessages(JSON.parse(cachedMessages))
+      } catch {
+        setMessages([])
+      }
     } else {
       try {
         const history = await getHistory(id, 0)
@@ -365,7 +370,7 @@ export default function ChatInterface() {
           </div>
         </div>
 
-        {!loadingChat ? (
+        {!loadingChat && (
           <div
             className={cn(
               'absolute right-0 bottom-0 left-0 p-4 transition-all duration-500 ease-in-out',
@@ -452,8 +457,6 @@ export default function ChatInterface() {
               </div>
             </form>
           </div>
-        ) : (
-          <div>Loading</div>
         )}
       </WavyBackground>
     </div>

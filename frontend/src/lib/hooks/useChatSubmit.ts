@@ -5,20 +5,22 @@ import { useStartChat } from '@/lib/hooks/useStartChat'
 import type { MessageData, MessageType } from '@/lib/interfaces'
 import { useCallback } from 'react'
 
+import { Dispatch, SetStateAction } from 'react'
+
 interface UseChatSubmitProps {
   chatID: number | undefined
   isNewChat: boolean
   inputValue: string
   setChatId: (id: number) => void
-  setMessages: React.Dispatch<React.SetStateAction<MessageData[]>>
+  setMessages: Dispatch<SetStateAction<MessageData[]>>
   setInputValue: (val: string) => void
   resetTextareaHeight: () => void
   setHasTyped: (val: boolean) => void
   setActiveButton: (btn: 'none') => void
   setIsLoading: (val: boolean) => void
   handleSetLocalStorage: (id: number) => void
+  addChat: (id: number) => void // 🆕 new!
 }
-
 export const useChatSubmit = ({
   chatID,
   isNewChat,
@@ -30,7 +32,8 @@ export const useChatSubmit = ({
   setHasTyped,
   setActiveButton,
   setIsLoading,
-  handleSetLocalStorage
+  handleSetLocalStorage,
+  addChat
 }: UseChatSubmitProps) => {
   const startChatMutation = useStartChat()
   const sendMessageMutation = useSendMessage()
@@ -53,6 +56,7 @@ export const useChatSubmit = ({
           dialogID = id
           setChatId(id)
           handleSetLocalStorage(id)
+          addChat(id) // 🆕 add chat to history
         }
 
         if (!dialogID) return
