@@ -168,7 +168,6 @@ export default function ChatInterface() {
     if (inputValue.trim() && !isLoading) {
       const userMessage = inputValue.trim()
       const userMessageId = Date.now()
-      const assistantMessageId = Date.now() + 1
 
       // Добавляем сообщение пользователя
       setMessages((prev) => [
@@ -181,13 +180,13 @@ export default function ChatInterface() {
       ])
 
       // Сбрасываем ввод
-
       setInputValue('')
-      resetTextareaHeight() // Add this line
-
+      resetTextareaHeight()
       setHasTyped(false)
       setActiveButton('none')
+
       const dialogID = 1
+
       const messageData = {
         dialog_id: dialogID,
         message: userMessage
@@ -200,10 +199,13 @@ export default function ChatInterface() {
         sendMessage(messageData, {
           onSuccess: async () => {
             try {
+              const tempAssistantMessageId = Date.now() + 1
+
               setMessages((prev) => [
                 ...prev,
                 {
-                  dialog_id: assistantMessageId,
+                  id: tempAssistantMessageId,
+                  dialog_id: dialogID,
                   message: '',
                   role: 'assistant' as MessageType,
                   isLoading: true
@@ -212,11 +214,14 @@ export default function ChatInterface() {
 
               const serverResponse = await getMessages(dialogID)
 
+              console.log(serverResponse)
+
               setMessages((prev) =>
                 prev.map((msg) =>
-                  msg.dialog_id === assistantMessageId
+                  msg.dialog_id === tempAssistantMessageId
                     ? {
                         ...msg,
+                        id: serverResponse.id,
                         message: serverResponse.message,
                         isLoading: false
                       }
@@ -335,7 +340,7 @@ export default function ChatInterface() {
             const isLastMessage = index === messages.length - 1
             return (
               <div
-                key={message.dialog_id}
+                key={message.id}
                 className={cn(
                   'flex w-[100%] flex-col',
                   message.role === 'user' ? 'items-end' : 'items-start'
@@ -376,13 +381,13 @@ export default function ChatInterface() {
                       <RefreshCcw className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleCopy(message.message, message.dialog_id)}
+                      onClick={() => handleCopy(message.message, message.id!)}
                       className={cn(
                         'hover:text-gray- cursor-pointer text-black transition-colors',
-                        copiedMessageId === message.dialog_id && 'animate-pulse text-green-500'
+                        copiedMessageId === message.id && 'animate-pulse text-green-500'
                       )}
                     >
-                      {copiedMessageId === message.dialog_id ? (
+                      {copiedMessageId === message.id ? (
                         <Check className="h-4 w-4" />
                       ) : (
                         <Copy className="h-4 w-4" />
