@@ -19,7 +19,7 @@ export const createMessage = async (messageData: MessageData): Promise<MessageDa
 export const getMessages = async (dialog_id: number): Promise<MessageData> => {
   const url = new URL(`${process.env.NEXT_PUBLIC_SERVER}/chat/chat_completion`)
   url.searchParams.append('dialog_id', dialog_id.toString())
-  url.searchParams.append('model', Models.DEEPSEEK_DISTILLED)
+  url.searchParams.append('model', Models.QWEN_2_5_32)
 
   const response = await fetch(url.toString(), {
     method: 'GET',

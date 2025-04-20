@@ -464,17 +464,22 @@ export default function ChatInterface() {
                 </div>
 
                 {message.role === 'assistant' && !message.isLoading && (
-                  <div className="mb-2 flex items-center gap-2 rounded-b-md bg-[#eaeaea] p-1 px-4">
-                    <button
-                      onClick={() => handleRegenerateMessage(message.id!)}
-                      className="hover:text-gray- cursor-pointer text-black transition-colors"
-                    >
-                      <RefreshCcw className="h-4 w-4" />
-                    </button>
+                  <div className="mt-2 mb-2 flex items-center gap-2 rounded-b-md p-1 px-4">
+                    {isLastMessage && (
+                      <button
+                        onClick={() => handleRegenerateMessage(message.id!)}
+                        className={cn(
+                          'cursor-pointer text-black transition-colors hover:text-gray-600'
+                        )}
+                      >
+                        <RefreshCcw className="h-4 w-4" />
+                      </button>
+                    )}
+
                     <button
                       onClick={() => handleCopy(message.message, message.dialog_id)}
                       className={cn(
-                        'hover:text-gray- cursor-pointer text-black transition-colors',
+                        'cursor-pointer text-black transition-colors hover:text-gray-600',
                         copiedMessageId === message.dialog_id && 'animate-pulse text-green-500'
                       )}
                     >
