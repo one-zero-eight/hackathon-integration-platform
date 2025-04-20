@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Body, HTTPException
+from fastapi_derive_responses import AutoDeriveResponsesAPIRoute
 
 from src.api.chat.ai_service import ConditionalPipeline
 from src.db.repositories import dialog_repository, messages_repository
@@ -9,7 +10,7 @@ TEST_VALIDATION_PROMPT = """
 Check if you have enough data to provide answer to user. Prompt user if you don't have enough data. Do not assume anything.
 """.strip()
 
-router = APIRouter(tags=["chat"])
+router = APIRouter(tags=["chat"], route_class=AutoDeriveResponsesAPIRoute)
 
 
 @router.post("/chat/create_message")
@@ -66,6 +67,7 @@ async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
 async def get_messages(dialog_id: int, amount: int = 0) -> list[ViewMessage]:
     """
     Get n last messages from dialog. To get all messages, set amount to 0.
+    NOTE: that endpoint is deprecated and left for compatibility. Consider using `/dialog/get_history` instead.
     """
     if await dialog_repository.get_dialog(dialog_id) is None:
         raise HTTPException(404, f"dialog {dialog_id} not found")

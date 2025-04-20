@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException
+from fastapi_derive_responses import AutoDeriveResponsesAPIRoute
 
 from src.db.repositories import messages_repository
 from src.schemas import CreateMessage, ViewMessage
 
-router = APIRouter(tags=["messages"])
+router = APIRouter(tags=["messages"], route_class=AutoDeriveResponsesAPIRoute)
 
 
 @router.post("/messages/create")

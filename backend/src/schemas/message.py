@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-from src.schemas import Models, Roles
+from src.schemas.chat import Models, Roles
 
 
 class ViewMessage(BaseModel):

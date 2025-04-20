@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db import AbstractSQLAlchemyStorage
 from src.db.models import Dialog
-from src.schemas import ViewDialog
+from src.schemas import ViewDialog, ViewMessage
 
 
 class DialogRepository:
@@ -33,6 +33,32 @@ class DialogRepository:
             if obj is not None:
                 return ViewDialog.model_validate(obj)
             return None
+
+    async def get_all_dialogs(self) -> list[ViewDialog]:
+        async with self._create_session() as session:
+            query = select(Dialog)
+            result = await session.execute(query)
+            objs = result.unique().scalars().all()
+        return [ViewDialog.model_validate(obj) for obj in objs]
+
+    async def get_dialog_messages(self, dialog_id: int, amount: int | None = None) -> list[ViewMessage] | None:
+        async with self._create_session() as session:
+            obj = await session.get(Dialog, dialog_id)
+            if obj is None:
+                return None
+            messages = [ViewMessage.model_validate(obj) for obj in obj.messages]
+            if amount is not None:
+                messages = messages[:amount]
+            return messages
+
+    async def delete_dialog(self, dialog_id: int) -> ViewDialog | None:
+        async with self._create_session() as session:
+            obj = await session.get(Dialog, dialog_id)
+            if obj is None:
+                return None
+            await session.delete(obj)
+            await session.commit()
+            return ViewDialog.model_validate(obj)
 
 
 dialog_repository: DialogRepository = DialogRepository()
