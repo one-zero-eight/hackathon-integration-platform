@@ -10,14 +10,6 @@ export interface MessageData {
   replyTo?: string
 }
 
-export interface ViewMessage {
-  id: string
-  dialog_id: string
-  role: MessageType
-  content: string
-  replyTo: string
-}
-
 export interface NewChat {
   id: number
 }

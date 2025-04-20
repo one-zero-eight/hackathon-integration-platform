@@ -1,4 +1,4 @@
-import { MessageData, Models, NewChat, ViewMessage } from '@/lib/interfaces'
+import { MessageData, Models, NewChat } from '@/lib/interfaces'
 
 export const createMessage = async (messageData: MessageData): Promise<MessageData> => {
   const h = {
@@ -16,7 +16,7 @@ export const createMessage = async (messageData: MessageData): Promise<MessageDa
   return response.json()
 }
 
-export const getMessages = async (dialog_id: number): Promise<ViewMessage> => {
+export const getMessages = async (dialog_id: number): Promise<MessageData> => {
   const url = new URL(`${process.env.NEXT_PUBLIC_SERVER}/chat/chat_completion`)
   url.searchParams.append('dialog_id', dialog_id.toString())
   url.searchParams.append('model', Models.DEEPSEEK_DISTILLED)

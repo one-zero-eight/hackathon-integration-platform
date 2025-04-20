@@ -10,8 +10,9 @@ import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Markdown from './MarkDown'
 import { WavyBackground } from './ui/wavy-background'
-import {useSendMessage} from "@/lib/hooks/useSendMessage";
-import {useStartChat} from "@/lib/hooks/useStartChat";
+import { useSendMessage } from '@/lib/hooks/useSendMessage'
+import { useStartChat } from '@/lib/hooks/useStartChat'
+import { useCreateChat } from '@/lib/hooks/useCreateChat'
 
 export default function ChatInterface() {
   const [chatID, setChatId] = useState<number | undefined>()
@@ -263,8 +264,8 @@ export default function ChatInterface() {
           msg.id === assistantMessageId
             ? {
                 ...msg,
-                id: Number(response.id),
-                message: response.content,
+                id: response.id,
+                message: response.message,
                 isLoading: false
               }
             : msg
@@ -316,24 +317,12 @@ export default function ChatInterface() {
     }
   }
 
-  const createChatMutation = useMutation({
-    mutationFn: createNewChat,
-    onMutate: () => {
-      setIsLoading(true)
-      setMessages([]) // clear old messages
-    },
-    onSuccess: (data) => {
-      console.log('New chat created with ID:', data.id)
-      setChatId(data.id)
-      handleSetLocalStorage(data.id)
-    },
-    onError: (error) => {
-      console.error('Error creating new chat:', error)
-    },
-    onSettled: () => {
-      setIsLoading(false)
-    }
+  const createChatMutation = useCreateChat((id) => {
+    setChatId(id)
+    localStorage.setItem('currentChatID', id.toString())
+    setMessages([])
   })
+
   const handleNewChat = () => {
     localStorage.removeItem(`messages:${chatID}`)
     localStorage.removeItem('currentChatID')
