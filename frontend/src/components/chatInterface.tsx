@@ -2,12 +2,14 @@
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { getHistory, getMessages } from '@/lib/api'
+import { useChatHook } from '@/lib/hooks/useChatHook'
 import { useCreateChat } from '@/lib/hooks/useCreateChat'
 import { useDeleteMessage } from '@/lib/hooks/useDeleteMessage'
 import { useRegenMessage } from '@/lib/hooks/useRegenMessage'
 import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import { useStartChat } from '@/lib/hooks/useStartChat'
-import { ActiveButton, MessageData, MessageType } from '@/lib/interfaces'
+import { useTextArea } from '@/lib/hooks/useTextArea'
+import { MessageData, MessageType } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
 import { ArrowUp, Check, Copy, Menu, PenSquare, Plus, RefreshCcw, Trash2, X } from 'lucide-react'
 import type React from 'react'
@@ -18,27 +20,35 @@ import { WavyBackground } from './ui/wavy-background'
 export default function ChatInterface() {
   const [chatID, setChatId] = useState<number | undefined>()
   const [messages, setMessages] = useState<MessageData[]>([])
-  const [inputValue, setInputValue] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
-  const [hasTyped, setHasTyped] = useState(false)
-  const [activeButton, setActiveButton] = useState<ActiveButton>('none')
   const [isMobile, setIsMobile] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [viewportHeight, setViewportHeight] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null)
-  const inputContainerRef = useRef<HTMLDivElement>(null)
   const shouldFocusAfterStreamingRef = useRef(false)
   const mainContainerRef = useRef<HTMLDivElement>(null)
   const [loadingChat, setLoadingChat] = useState<boolean>(true)
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const isNewChat = !loadingChat && (chatID === undefined || messages.length === 0)
-  const selectionStateRef = useRef<{ start: number | null; end: number | null }>({
-    start: null,
-    end: null
-  })
 
+  const {
+    textareaRef,
+    inputContainerRef,
+    inputValue,
+    setInputValue,
+    hasTyped,
+    setHasTyped,
+    resetTextareaHeight,
+    saveSelectionState,
+    restoreSelectionState,
+    focusTextarea,
+    handleInputContainerClick,
+    handleInputChange
+  } = useTextArea(isMobile)
+
+  const onInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    handleInputChange(e, isLoading)
+  }
   const sendMessageMutation = useSendMessage()
   const startChatMutation = useStartChat()
   const regenMessageMutation = useRegenMessage()
@@ -97,7 +107,6 @@ export default function ChatInterface() {
 
     checkMobileAndViewport()
 
-    // Set initial height
     if (mainContainerRef.current) {
       mainContainerRef.current.style.height = isMobile ? `${viewportHeight}px` : '100svh'
     }
@@ -115,7 +124,6 @@ export default function ChatInterface() {
     }
   }, [isMobile])
 
-  // Set focus back to textarea after streaming ends (only on desktop)
   useEffect(() => {
     if (!isLoading && shouldFocusAfterStreamingRef.current && !isMobile) {
       focusTextarea()
@@ -123,7 +131,6 @@ export default function ChatInterface() {
     }
   }, [isLoading, isMobile])
 
-  // Scroll to bottom when new messages are added
   useEffect(() => {
     if (messages.length > 0 && chatContainerRef.current) {
       chatContainerRef.current.scrollTo({
@@ -139,73 +146,9 @@ export default function ChatInterface() {
     }
   }, [inputValue])
 
-  // Save the current selection state
-  const saveSelectionState = () => {
-    if (textareaRef.current) {
-      selectionStateRef.current = {
-        start: textareaRef.current.selectionStart,
-        end: textareaRef.current.selectionEnd
-      }
-    }
-  }
-
-  // Restore the saved selection state
-  const restoreSelectionState = () => {
-    const textarea = textareaRef.current
-    const { start, end } = selectionStateRef.current
-
-    if (textarea && start !== null && end !== null) {
-      // Focus first, then set selection range
-      textarea.focus()
-      textarea.setSelectionRange(start, end)
-    } else if (textarea) {
-      // If no selection was saved, just focus
-      textarea.focus()
-    }
-  }
-
-  const focusTextarea = () => {
-    if (textareaRef.current && !isMobile) {
-      textareaRef.current.focus()
-    }
-  }
-
-  const handleInputContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Only focus if clicking directly on the container, not on buttons or other interactive elements
-    if (
-      e.target === e.currentTarget ||
-      (e.currentTarget === inputContainerRef.current &&
-        !(e.target as HTMLElement).closest('button'))
-    ) {
-      if (textareaRef.current) {
-        textareaRef.current.focus()
-      }
-    }
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value
-
-    // Only allow input changes when not streaming
-    if (!isLoading) {
-      setInputValue(newValue)
-
-      if (newValue.trim() !== '' && !hasTyped) {
-        setHasTyped(true)
-      } else if (newValue.trim() === '' && hasTyped) {
-        setHasTyped(false)
-      }
-
-      const textarea = textareaRef.current
-      if (textarea) {
-        textarea.style.height = 'auto'
-        const newHeight = Math.max(24, Math.min(textarea.scrollHeight, 160))
-        textarea.style.height = `${newHeight}px`
-
-        textarea.style.overflowY = newHeight >= 160 ? 'auto' : 'hidden'
-      }
-    }
-  }
+  // ----------------------------------
+  // ------------ CHATS ---------------
+  // ----------------------------------
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -291,44 +234,21 @@ export default function ChatInterface() {
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Handle Cmd+Enter on both mobile and desktop
-    if (!isLoading && e.key === 'Enter' && e.metaKey) {
-      e.preventDefault()
-      handleSubmit(e)
-      return
-    }
-
-    // Only handle regular Enter key (without Shift) on desktop
-    if (!isLoading && !isMobile && e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit(e)
-    }
-  }
-
-  const toggleButton = (button: ActiveButton) => {
-    if (!isLoading) {
-      // Save the current selection state before toggling
-      saveSelectionState()
-
-      setActiveButton((prev) => (prev === button ? 'none' : button))
-
-      // Restore the selection state after toggling
-      setTimeout(() => {
-        restoreSelectionState()
-      }, 0)
-    }
-  }
-
-  const handleCopy = async (content: string, messageId: number) => {
-    try {
-      await navigator.clipboard.writeText(content)
-      setCopiedMessageId(messageId)
-      setTimeout(() => setCopiedMessageId(null), 2000) // Reset after 2 seconds
-    } catch (err) {
-      console.error('Failed to copy text: ', err)
-    }
-  }
+  const {
+    activeButton,
+    setActiveButton,
+    copiedMessageId,
+    handleKeyDown,
+    toggleButton,
+    handleCopy,
+    handleSetLocalStorage
+  } = useChatHook({
+    isLoading,
+    isMobile,
+    handleSubmit,
+    saveSelection: saveSelectionState,
+    restoreSelection: restoreSelectionState
+  })
 
   const createChatMutation = useCreateChat((id) => {
     setChatId(id)
@@ -343,17 +263,6 @@ export default function ChatInterface() {
     setMessages([])
     setChatId(undefined)
     createChatMutation.mutate()
-  }
-
-  const handleSetLocalStorage = (id: number) => {
-    localStorage.setItem('currentChatID', id.toString())
-  }
-
-  const resetTextareaHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = '24px'
-    }
   }
 
   const handleRegenerateMessage = async (message_id: number) => {
@@ -604,7 +513,7 @@ export default function ChatInterface() {
                     placeholder={isLoading ? 'Waiting for response...' : 'Ask Anything'}
                     className="max-h-[260px] min-h-[24px] w-full resize-none overflow-y-auto rounded-3xl border-0 bg-transparent pt-0 pr-4 pb-0 pl-2 text-base leading-tight text-gray-900 placeholder:text-base placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                     value={inputValue}
-                    onChange={handleInputChange}
+                    onChange={onInputChange}
                     onKeyDown={handleKeyDown}
                     onFocus={() => {
                       // Ensure the textarea is scrolled into view when focused
