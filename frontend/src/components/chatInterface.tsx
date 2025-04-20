@@ -11,7 +11,18 @@ import { useStartChat } from '@/lib/hooks/useStartChat'
 import { useTextArea } from '@/lib/hooks/useTextArea'
 import { ActiveButton } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
-import { ArrowUp, Check, Copy, Menu, PenSquare, Plus, RefreshCcw, Trash2, X } from 'lucide-react'
+import {
+  ArrowUp,
+  Check,
+  Copy,
+  Menu,
+  MessageCircleOff,
+  PenSquare,
+  Plus,
+  RefreshCcw,
+  Trash2,
+  X
+} from 'lucide-react'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Markdown from './MarkDown'
@@ -231,24 +242,33 @@ export default function ChatInterface() {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-5 right-5 cursor-pointer rounded-full p-6"
+            className="absolute top-5 right-5 block cursor-pointer rounded-full p-6 sm:hidden"
             onClick={() => setMenuOpen(false)}
           >
             <X className="!h-8 !w-8 text-black" />
           </Button>
           <div className="w-[300px] space-y-2">
-            {chatList.map((id) => (
-              <p
-                key={id}
-                className={cn(
-                  'mx-2 cursor-pointer rounded-md px-2 py-2 text-xl hover:bg-gray-300',
-                  chatID === id && 'bg-gray-400'
-                )}
-                onClick={() => loadChatById(id)}
-              >
-                Chat - {id}
-              </p>
-            ))}
+            <h3 className="mx-2 mb-8 text-left text-3xl">History</h3>
+            {chatList.length > 0 ? (
+              chatList.map((id) => (
+                <p
+                  key={id}
+                  className={cn(
+                    'mx-2 cursor-pointer rounded-md px-2 py-2 text-xl hover:bg-gray-300',
+                    chatID === id && 'bg-gray-400'
+                  )}
+                  onClick={() => loadChatById(id)}
+                >
+                  Chat - {id}
+                </p>
+              ))
+            ) : (
+              <div className="flex h-[200px] flex-col items-center justify-center gap-4 text-red-400">
+                <h3 className="text-xl">You do not have any chats</h3>
+
+                <MessageCircleOff />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -349,13 +369,13 @@ export default function ChatInterface() {
                       )}
 
                       <button
-                        onClick={() => handleCopy(message.message, message.dialog_id)}
+                        onClick={() => handleCopy(message.message, message?.id)}
                         className={cn(
                           'cursor-pointer text-black transition-colors hover:text-gray-600',
-                          copiedMessageId === message.dialog_id && 'animate-pulse text-green-500'
+                          copiedMessageId === message.id && 'animate-pulse text-green-500'
                         )}
                       >
-                        {copiedMessageId === message.dialog_id ? (
+                        {copiedMessageId === message.id ? (
                           <Check className="h-4 w-4" />
                         ) : (
                           <Copy className="h-4 w-4" />

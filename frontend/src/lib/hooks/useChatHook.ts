@@ -45,7 +45,7 @@ export function useChatHook({
     },
     [isLoading, saveSelection, restoreSelection]
   )
-  const handleCopy = useCallback(async (text: string, messageId: number) => {
+  const handleCopy = useCallback(async (text: string, messageId: number | undefined) => {
     try {
       await navigator.clipboard.writeText(text)
       setCopiedMessageId(messageId)
