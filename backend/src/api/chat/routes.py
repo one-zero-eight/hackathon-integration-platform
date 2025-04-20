@@ -25,7 +25,7 @@ async def create_message(dialog_id: int = Body(...), message: str = Body(...)) -
     created_message = CreateMessage(
         dialog_id=dialog_id,
         role=Roles.USER,
-        content=message,
+        message=message,
     )
     created = await messages_repository.create_message(created_message)
     return created
@@ -53,7 +53,7 @@ async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
     assistant_msg = CreateMessage(
         dialog_id=dialog_id,
         role=Roles.ASSISTANT,
-        content=assistant_content,
+        message=assistant_content,
         reply_to=last_message.id,
         model=model,
     )
@@ -84,16 +84,16 @@ async def delete_message(message_id: int) -> None:
 
 
 @router.post("/chat/regenerate")
-async def regenerate_response(response_id: int) -> ViewMessage:
-    response = await messages_repository.get_message_by_id(response_id)
+async def regenerate_response(message_id: int) -> ViewMessage:
+    response = await messages_repository.get_message_by_id(message_id)
     if response is None:
-        raise HTTPException(404, f"Message not found: {response_id}")
+        raise HTTPException(404, f"Message not found: {message_id}")
 
-    request = await messages_repository.get_request(response_id)
+    request = await messages_repository.get_request(message_id)
     if request is None:
         raise HTTPException(400, "message is not response")
 
-    await messages_repository.delete_message(response_id)
+    await messages_repository.delete_message(message_id)
 
     history = await messages_repository.get_all_dialog_messages(request.dialog_id)
 
@@ -109,7 +109,7 @@ async def regenerate_response(response_id: int) -> ViewMessage:
     assistant_msg = CreateMessage(
         dialog_id=request.dialog_id,
         role=Roles.ASSISTANT,
-        content=assistant_content,
+        message=assistant_content,
         model=response.model,
         reply_to=request.id,
     )

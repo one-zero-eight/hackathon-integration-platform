@@ -15,7 +15,7 @@ class Message(Base, IdMixin):
 
     dialog_id: Mapped[int] = mapped_column(ForeignKey("dialog.id", ondelete="CASCADE"), nullable=False)
     role: Mapped[str] = mapped_column(nullable=False)
-    content: Mapped[str] = mapped_column(nullable=False)
+    message: Mapped[str] = mapped_column(nullable=False)
     model: Mapped[str] = mapped_column(nullable=True)
     reply_to: Mapped[int | None] = mapped_column(
         ForeignKey("message.id", ondelete="CASCADE"), nullable=True, unique=True

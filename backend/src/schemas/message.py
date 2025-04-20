@@ -7,7 +7,7 @@ class ViewMessage(BaseModel):
     id: int
     dialog_id: int
     role: Roles
-    content: str
+    message: str
     model: Models | None
     reply_to: int | None
 
@@ -17,7 +17,7 @@ class ViewMessage(BaseModel):
 class CreateMessage(BaseModel):
     dialog_id: int
     role: Roles
-    content: str
+    message: str
     model: Models | None = None
     reply_to: int | None = None
 
