@@ -190,6 +190,9 @@ export default function ChatInterface() {
   })
 
   const loadChatById = async (id: number) => {
+    if (isMobile) {
+      setMenuOpen(false)
+    }
     setLoadingChat(true)
     setChatId(id)
     localStorage.setItem('currentChatID', id.toString())
@@ -217,10 +220,22 @@ export default function ChatInterface() {
       <div className="flex h-screen overflow-hidden">
         <div
           className={cn(
-            'h-full overflow-hidden bg-[#eaeaea] pt-24 transition-all duration-300 ease-in-out',
-            menuOpen ? 'w-[350px]' : 'w-0'
+            'z-30 h-full overflow-hidden bg-[#eaeaea] pt-24 transition-all duration-300 ease-in-out',
+            'max-sm:fixed max-sm:top-0 max-sm:left-0 max-sm:h-screen max-sm:w-full max-sm:transform max-sm:transition-all max-sm:duration-300 max-sm:ease-in-out',
+            menuOpen
+              ? 'max-sm:translate-x-0 max-sm:scale-100 max-sm:opacity-100'
+              : 'max-sm:-translate-x-full max-sm:scale-95 max-sm:opacity-0',
+            menuOpen ? 'sm:w-[350px]' : 'sm:w-0'
           )}
         >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-5 right-5 cursor-pointer rounded-full p-6"
+            onClick={() => setMenuOpen(false)}
+          >
+            <X className="!h-8 !w-8 text-black" />
+          </Button>
           <div className="w-[300px] space-y-2">
             {chatList.map((id) => (
               <p
@@ -280,7 +295,7 @@ export default function ChatInterface() {
           ref={chatContainerRef}
           className="scrollbar-none flex-grow overflow-y-auto px-4 pt-24 pb-32"
         >
-          <div className="mx-auto flex w-[90vw] flex-col gap-4 md:w-2xl lg:w-4xl xl:w-6xl">
+          <div className="mx-auto flex w-[90%] flex-col gap-4 xl:w-6xl">
             {messages.map((message, index) => {
               const isLastMessage = index === messages.length - 1
               return (
@@ -385,7 +400,7 @@ export default function ChatInterface() {
             <form
               onSubmit={handleSubmit}
               className={cn(
-                'mx-auto w-[90vw] transition-all duration-500 ease-in md:w-2xl lg:w-4xl xl:w-6xl',
+                'mx-auto w-[90%] transition-all duration-500 ease-in xl:w-6xl',
                 isNewChat && 'md:w-xl lg:w-2xl xl:w-4xl'
               )}
             >
