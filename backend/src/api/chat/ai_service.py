@@ -51,10 +51,10 @@ class ConditionalPipeline:
     Please verify if the following data in the dialog meets the requirements described above.
     Consider the entire conversation context.
     You need to explicitly specify whether the data meet requirements.
-    If you consider that data doesn't meet requirements explicitly and in details specify why and prompt user to add missing information.
-    If you consider that data meets requirements provide very brief explanation without much details.
+    If you consider that data doesn't meet requirements explicitly and in details specify why.
     Respond strictly in JSON with the shape:
     {"is_valid": bool, "message": string}
+    Return json as plain text without any formatting.
     """.strip()
 
     def __init__(
@@ -89,6 +89,7 @@ class ConditionalPipeline:
         messages.extend([{"role": msg.role.value, "content": msg.message} for msg in (history or [])])
 
         raw = await call_model(messages, self.validation_model, self.validation_temperature)
+        raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL)
 
         pattern = r"```(?:json)?\s*(\{.*?\})\s*```"
         match = re.search(pattern, raw, re.DOTALL)
