@@ -10,7 +10,7 @@ from src.schemas.chat import Models, Roles
 router = APIRouter(tags=["chat"], prefix="/chat", route_class=AutoDeriveResponsesAPIRoute)
 
 
-@router.post("/create_message")
+@router.post("/create_message1")
 async def create_message(dialog_id: int = Body(...), message: str = Body(...)) -> ViewMessage:
     """
     Create a new user message in a specified dialog.
