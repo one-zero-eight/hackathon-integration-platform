@@ -10,7 +10,7 @@ from src.schemas.chat import Models, Roles
 router = APIRouter(tags=["chat"], prefix="/chat", route_class=AutoDeriveResponsesAPIRoute)
 
 
-@router.post("/create_message1")
+@router.post("/create_message")
 async def create_message(dialog_id: int = Body(...), message: str = Body(...)) -> ViewMessage:
     """
     Create a new user message in a specified dialog.
@@ -48,7 +48,7 @@ async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
     pipeline = ConditionalPipeline(
         main_system_prompt=SYSTEM_PROMPT,
         validation_prompt=VALIDATION_PROMPT,
-        validation_model=Models.DEEPSEEK_DISTILLED,
+        validation_model=Models.MWS_GPT_ALPHA,
         main_model=model,
     )
     assistant_content = await pipeline.run(
@@ -117,7 +117,7 @@ async def regenerate_response(message_id: int) -> ViewMessage:
     pipeline = ConditionalPipeline(
         main_system_prompt=SYSTEM_PROMPT,
         validation_prompt=VALIDATION_PROMPT,
-        validation_model=Models.DEEPSEEK_DISTILLED,
+        validation_model=Models.MWS_GPT_ALPHA,
         main_model=response.model,
     )
     assistant_content = await pipeline.run(
