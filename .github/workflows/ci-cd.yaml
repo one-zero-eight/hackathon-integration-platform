@@ -106,8 +106,15 @@ jobs:
 
       - name: Деплой бэкенда
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.BACKEND_PATH }} && git pull && docker compose down && docker compose rmi backend-api && docker volume rm backend_postgres && docker compose up -d"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          cd ${{ secrets.BACKEND_PATH }} && \
+          git config pull.rebase true && \
+          git pull && \
+          docker compose down && \
+          docker images -q backend-api | grep . && docker rmi backend-api || echo 'No image to remove' && \
+          docker volume rm backend_postgres || echo 'Volume not found' && \
+          docker compose up -d"
 
       - name: Деплой фронтенда
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.FRONTEND_PATH }} && git pull && pnpm install && pnpm build && pm2 restart frontend || pm2 start npm --name frontend -- start"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.FRONTEND_PATH }} && git pull && export PATH=$PATH:/root/.local/share/pnpm/ && pnpm install && pnpm build && pm2 restart frontend || pm2 start pnpm --name frontend -- start"
