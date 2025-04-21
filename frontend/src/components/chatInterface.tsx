@@ -10,12 +10,12 @@ import { ActiveButton } from '@/lib/interfaces'
 import { cn } from '@/lib/utils'
 import {
   ArrowUp,
+  Braces,
   Check,
   Copy,
   Menu,
   MessageCircleOff,
   PenSquare,
-  Plus,
   RefreshCcw,
   Trash2,
   X
@@ -70,13 +70,6 @@ export default function ChatInterface() {
     }
   }, [])
 
-  const removeChat = (id: number) => {
-    setChatList((prev) => {
-      const updated = prev.filter((chatId) => chatId !== id)
-      localStorage.setItem('chatHistory', JSON.stringify(updated))
-      return updated
-    })
-  }
   const {
     textareaRef,
     inputContainerRef,
@@ -256,7 +249,7 @@ export default function ChatInterface() {
       <div className="flex h-screen overflow-hidden">
         <div
           className={cn(
-            'z-30 h-full overflow-hidden bg-[#eaeaea] pt-24 transition-all duration-300 ease-in-out',
+            'z-30 h-full overflow-hidden bg-[#eaeaea] pt-8 transition-all duration-300 ease-in-out',
             'max-sm:fixed max-sm:top-0 max-sm:left-0 max-sm:h-screen max-sm:w-full max-sm:transform max-sm:transition-all max-sm:duration-300 max-sm:ease-in-out',
             menuOpen
               ? 'max-sm:translate-x-0 max-sm:scale-100 max-sm:opacity-100'
@@ -267,33 +260,46 @@ export default function ChatInterface() {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-5 right-5 block cursor-pointer rounded-full p-6 sm:hidden"
+            className="absolute top-2 right-5 block cursor-pointer rounded-full p-6 sm:hidden"
             onClick={() => setMenuOpen(false)}
           >
             <X className="!h-8 !w-8 text-black" />
           </Button>
-          <div className="w-[300px] space-y-2">
-            <h3 className="mx-2 mb-8 text-left text-3xl">History</h3>
-            {chatList.length > 0 ? (
-              chatList.map((id) => (
-                <p
-                  key={id}
-                  className={cn(
-                    'mx-2 cursor-pointer rounded-md px-2 py-2 text-xl hover:bg-gray-300',
-                    chatID === id && 'bg-gray-400'
+          <div className="w-full space-y-8 px-2">
+            <h3 className="flex items-center justify-center gap-2 border-b-[1px] border-black pb-3 text-center text-3xl">
+              <Braces className="h-8 w-8 text-red-500" /> History
+            </h3>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="h-12 w-full cursor-pointer rounded-md px-4 text-lg"
+              onClick={handleNewChat}
+            >
+              <PenSquare className="h-40 w-40 text-red-500" />
+              New Chat
+            </Button>
+            <div className="h-[1px] w-full bg-black" />
+            <div>
+              {chatList.length > 0 && menuOpen
+                ? chatList.map((id) => (
+                    <p
+                      key={id}
+                      className={cn(
+                        'cursor-pointer rounded-md px-4 py-2 text-xl hover:bg-gray-300',
+                        chatID === id && 'bg-gray-400'
+                      )}
+                      onClick={() => loadChatById(id)}
+                    >
+                      Chat - {id}
+                    </p>
+                  ))
+                : menuOpen && (
+                    <div className="flex h-[200px] w-full flex-col items-center justify-center gap-4 text-gray-400">
+                      <h3 className="text-xl">You do not have any chats</h3>
+                      <MessageCircleOff />
+                    </div>
                   )}
-                  onClick={() => loadChatById(id)}
-                >
-                  Chat - {id}
-                </p>
-              ))
-            ) : (
-              <div className="flex h-[200px] flex-col items-center justify-center gap-4 text-red-400">
-                <h3 className="text-xl">You do not have any chats</h3>
-
-                <MessageCircleOff />
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -307,12 +313,12 @@ export default function ChatInterface() {
         colors={['rgba(227, 18, 6, 0.7)', '#eaeaea', 'rgba(227, 18, 6, 0.7)']}
         style={{ height: isMobile ? `${viewportHeight}px` : '100svh' }}
       >
-        <header className="absolute top-0 right-0 left-0 z-20 flex items-center bg-white px-4">
-          <div className="flex w-full items-center justify-between px-2 py-4">
+        <header className="relative top-0 right-0 left-0 z-20 flex items-center bg-white px-4 py-3">
+          <div className="flex w-full items-center justify-center px-2 py-4">
             <Button
               variant="ghost"
               size="icon"
-              className="cursor-pointer rounded-full p-6"
+              className="absolute top-1/2 left-3 -translate-y-1/2 cursor-pointer rounded-full p-6"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               {menuOpen ? (
@@ -321,18 +327,7 @@ export default function ChatInterface() {
                 <Menu className="!h-8 !w-8 text-black" />
               )}
             </Button>
-
-            <h1 className="text-base font-medium text-gray-800">JSON Generator</h1>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-12 w-auto cursor-pointer rounded-full px-4"
-              onClick={handleNewChat}
-            >
-              <PenSquare className="h-40 w-40 text-black" />
-              New Chat
-            </Button>
+            <h1 className="text-3xl font-medium text-gray-800">JSON Generator</h1>
           </div>
         </header>
 
@@ -347,7 +342,7 @@ export default function ChatInterface() {
                 <div
                   key={message.id}
                   className={cn(
-                    'flex w-[100%] flex-col',
+                    'flex w-[100%] flex-col text-xl',
                     message.role === 'user' ? 'items-end' : 'items-start'
                   )}
                 >
@@ -479,27 +474,7 @@ export default function ChatInterface() {
                 </div>
 
                 <div className="absolute right-3 bottom-3 left-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className={cn(
-                          'h-8 w-8 flex-shrink-0 cursor-pointer rounded-full border transition-all duration-200',
-                          activeButton === 'add'
-                            ? 'scale-110 border-[#E30611] bg-[#E30611] text-white hover:bg-white hover:text-[#E30611]'
-                            : 'border-gray-400 bg-gray-100',
-                          isLoading && 'cursor-not-allowed opacity-50'
-                        )}
-                        onClick={() => toggleButton('add')}
-                        disabled={isLoading}
-                      >
-                        <Plus className={cn('h-4 w-4 transition-colors')} />
-                        <span className="sr-only">Add</span>
-                      </Button>
-                    </div>
-
+                  <div className="flex items-center justify-end">
                     <Button
                       type="submit"
                       variant="outline"

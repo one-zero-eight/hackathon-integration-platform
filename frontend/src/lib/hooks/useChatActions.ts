@@ -8,7 +8,7 @@ import { useRegenMessage } from './useRegenMessage'
 interface UseChatActionsParams {
   addChat: (id: number) => void
   setChatList: (list: number[]) => void
-  removeChat?: (id: number) => void // optional, not required if you use setChatList
+  removeChat?: (id: number) => void
 }
 
 export function useChatActions({ addChat, setChatList }: UseChatActionsParams) {
