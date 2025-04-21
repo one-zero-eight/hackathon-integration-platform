@@ -48,7 +48,7 @@ async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
     pipeline = ConditionalPipeline(
         main_system_prompt=SYSTEM_PROMPT,
         validation_prompt=VALIDATION_PROMPT,
-        validation_model=Models.QWEN_2_5_32,
+        validation_model=Models.MWS_GPT_ALPHA,
         main_model=model,
     )
     assistant_content = await pipeline.run(
@@ -117,7 +117,7 @@ async def regenerate_response(message_id: int) -> ViewMessage:
     pipeline = ConditionalPipeline(
         main_system_prompt=SYSTEM_PROMPT,
         validation_prompt=VALIDATION_PROMPT,
-        validation_model=Models.QWEN_2_5_32,
+        validation_model=Models.MWS_GPT_ALPHA,
         main_model=response.model,
     )
     assistant_content = await pipeline.run(
