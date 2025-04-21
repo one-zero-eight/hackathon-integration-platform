@@ -5,4 +5,4 @@ docker rm backend-api-1 backend-db-1
 docker rmi backend-api
 docker volume rm backend_postgres
 
-docker-compose up
+docker-compose up -d
