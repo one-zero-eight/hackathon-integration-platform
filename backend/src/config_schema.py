@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 
 class ApiSettings(BaseModel):
-    app_root_path: str = Field("")
+    app_root_path: str = Field("/api")
     'Prefix for the API path (e.g. "/api/v0")'
     cors_allow_origin_regex: str = ".*"
     "Allowed origins for CORS: from which domains requests to the API are allowed."
