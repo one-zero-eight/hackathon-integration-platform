@@ -1,4 +1,4 @@
-# MWS AI JSON Schema Builder backend
+# MWS AI JSON Builder backend
 
 ## About
 

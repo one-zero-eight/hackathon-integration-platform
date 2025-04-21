@@ -1,6 +1,5 @@
 # Chat User Interface - AI JSON Generator
 
----
 [![NextJS][Nextjs]][Next-url]
 [![React][React]][react-url]
 [![React Query][react-query]][rq-url]
@@ -8,6 +7,7 @@
 [![TypeScript][TypeScript]][ts-url]
 [![ShadCN UI][Shadcnui]][shadcn-url]
 [![pnpm][pnpm]][pnpm-url]
+[![Prettier][prettier]][prettier-url]
 [![JSON][json]][json-url]
 
 This project is a frontend application for an interactive chat interface, potentially designed to interact with a
@@ -88,3 +88,7 @@ Check out the [deployment documentation](https://nextjs.org/docs/app/building-yo
 [react-query]: https://img.shields.io/badge/React_Query-000000.svg?style=for-the-badge&logo=ReactQuery&logoColor=white
 
 [rq-url]: https://tanstack.com/query/latest/docs/framework/react/overview
+
+[prettier]: https://img.shields.io/badge/prettier-000000.svg?style=for-the-badge&logo=prettier&logoColor=F7BA3E
+
+[prettier-url]: https://prettier.io/
