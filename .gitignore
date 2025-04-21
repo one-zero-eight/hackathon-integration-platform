@@ -3,5 +3,5 @@
 node_modules
 build
 dist
-frontend/.env
 /.DS_store
+/frontend/.env
