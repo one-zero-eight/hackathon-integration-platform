@@ -16,7 +16,7 @@ MWS_GPT_API_ENDPOINT = api_settings.mws_gpt_api_url + "/v1/chat/completions"
 async def call_model(
     messages: list[dict[str, str]],
     model: Models,
-    temperature: float = 0.4,
+    temperature: float = 0.5,
 ) -> str:
     """
     Make a single chat completion call to the specified model.
@@ -47,7 +47,7 @@ class ConditionalPipeline:
       4. If valid   -> send to main model and return its output
     """
 
-    VALIDATION_SYSTEM_PROMPT = """
+    INNER_VALIDATION_SYSTEM_PROMPT = """
     Please verify if the following data in the dialog meets the requirements described above.
     Consider the entire conversation context.
     You need to explicitly specify whether the data meet requirements.
@@ -56,16 +56,17 @@ class ConditionalPipeline:
     {"is_valid": bool, "message": string}
     Return json as plain text without any formatting.
     """.strip()
-    DEFAULT_MAIN_SYSTEM_PROMPT = "You are a friendly assistant. Provide detailed and helpful answers."
 
     def __init__(
         self,
+        main_system_prompt: str,
         validation_prompt: str,
         validation_model: Models,
         main_model: Models,
-        validation_temperature: float = 0.4,
-        main_temperature: float = 0.4,
+        validation_temperature: float = 0.2,
+        main_temperature: float = 0.35,
     ):
+        self.main_system_prompt = main_system_prompt
         self.validation_prompt = validation_prompt
         self.validation_model = validation_model
         self.main_model = main_model
@@ -75,15 +76,15 @@ class ConditionalPipeline:
     async def validate(self, history: list[ViewMessage] | None = None) -> dict[str, Any]:
         user_query: str = history[-1].message if history else ""
         doc_ctx: str = VectorRetriever.retrieve(user_query)
-        system_content: str = (
+        compiled_validation_prompt: str = (
             "You have access to the following documentation. Use that documentation for checking if dialog meets the requirements:\n\n"
             f"{doc_ctx}\n\n"
             "You must strictly follow following validation instructions:\n"
-            f"{self.validation_prompt} {self.VALIDATION_SYSTEM_PROMPT}"
+            f"{self.validation_prompt} {self.INNER_VALIDATION_SYSTEM_PROMPT}"
         )
 
         messages: list[dict[str, str]] = [
-            {"role": Roles.SYSTEM.value, "content": system_content},
+            {"role": Roles.SYSTEM.value, "content": compiled_validation_prompt},
         ]
         messages.extend([{"role": msg.role.value, "content": msg.message} for msg in (history or [])])
 
@@ -103,12 +104,8 @@ class ConditionalPipeline:
 
     async def run(
         self,
-        main_system_prompt: str | None = None,
         history: list[ViewMessage] | None = None,
     ) -> str:
-        if main_system_prompt is None:
-            main_system_prompt = self.DEFAULT_MAIN_SYSTEM_PROMPT
-
         try:
             result = await self.validate(history)
         except HTTPStatusError as e:
@@ -123,7 +120,7 @@ class ConditionalPipeline:
             "You have access to the following documentation:\n\n"
             f"{doc_ctx}\n\n"
             "Answer instructions:\n"
-            f"{main_system_prompt}"
+            f"{self.main_system_prompt}"
         )
 
         messages: list[dict[str, str]] = [{"role": Roles.SYSTEM.value, "content": final_system_prompt}]

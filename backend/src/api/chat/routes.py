@@ -2,13 +2,10 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi_derive_responses import AutoDeriveResponsesAPIRoute
 
 from src.api.chat.ai_service import ConditionalPipeline
+from src.api.chat.constants import SYSTEM_PROMPT, VALIDATION_PROMPT
 from src.db.repositories import dialog_repository, messages_repository
 from src.schemas import CreateMessage, ViewMessage
 from src.schemas.chat import Models, Roles
-
-TEST_VALIDATION_PROMPT = """
-Check if you have enough data to provide answer to user. Prompt user if you don't have enough data. Do not assume anything.
-""".strip()
 
 router = APIRouter(tags=["chat"], prefix="/chat", route_class=AutoDeriveResponsesAPIRoute)
 
@@ -49,7 +46,8 @@ async def chat_completion(dialog_id: int, model: Models) -> ViewMessage:
         raise HTTPException(400, "last message is already an AI reply")
 
     pipeline = ConditionalPipeline(
-        validation_prompt=TEST_VALIDATION_PROMPT,
+        main_system_prompt=SYSTEM_PROMPT,
+        validation_prompt=VALIDATION_PROMPT,
         validation_model=Models.GEMMA_3,
         main_model=model,
     )
@@ -117,7 +115,8 @@ async def regenerate_response(message_id: int) -> ViewMessage:
     history = await messages_repository.get_all_dialog_messages(request.dialog_id)
 
     pipeline = ConditionalPipeline(
-        validation_prompt=TEST_VALIDATION_PROMPT,
+        main_system_prompt=SYSTEM_PROMPT,
+        validation_prompt=VALIDATION_PROMPT,
         validation_model=Models.LLAMA_3_3,
         main_model=response.model,
     )

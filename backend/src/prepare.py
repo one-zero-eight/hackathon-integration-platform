@@ -180,6 +180,11 @@ def initialize_vector_index() -> None:
     settings = get_settings()
     doc_path = Path(settings.get("api_settings", {}).get("def_json_documentation_path"))
     rag_index_path = Path(settings.get("api_settings", {}).get("rag_index_path"))
+
+    if rag_index_path.exists() and any(rag_index_path.iterdir()):
+        print(f"✅ RAG index already exists at: {rag_index_path}, skipping build.")
+        return
+
     if not doc_path.exists():
         print(f"❌ Documentation pdf/docx/md not found at: {doc_path}")
         return
@@ -188,10 +193,6 @@ def initialize_vector_index() -> None:
         return
 
     print(f"✅ Documentation pdf/docx/md found at: {doc_path}")
-
-    if rag_index_path.exists() and any(rag_index_path.iterdir()):
-        print(f"✅ RAG index already exists at: {rag_index_path}, skipping build.")
-        return
 
     try:
         print("⚙️ Building vector index from documentation...")
