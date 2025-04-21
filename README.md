@@ -77,9 +77,7 @@ nano frontend/.env
 
 ## 🖼️ Демо
 
-_Здесь может быть гифка, демонстрирующая использование платформы:_
-
-![demo](./assets/demo.gif)
+![demo](https://github.com/one-zero-eight/hackathon-integration-platform/raw/main/assets/demo.gif)
 
 ---
 
