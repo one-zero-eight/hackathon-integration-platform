@@ -19,10 +19,9 @@ interface UseChatSubmitProps {
   isAssistantResponding: boolean
   setActiveButton: (btn: 'none') => void
   setIsAssistantResponding: (val: boolean) => void
-
   setIsLoading: (val: boolean) => void
   handleSetLocalStorage: (id: number) => void
-  addChat: (id: number) => void
+  addChat: (id: number, title: string) => void
 }
 export const useChatSubmit = ({
   chatID,
@@ -63,7 +62,7 @@ export const useChatSubmit = ({
           dialogID = id
           setChatId(id)
           handleSetLocalStorage(id)
-          addChat(id) // 🆕 add chat to history
+          addChat(id, userMessage.slice(0, 30))
         }
 
         if (!dialogID) return

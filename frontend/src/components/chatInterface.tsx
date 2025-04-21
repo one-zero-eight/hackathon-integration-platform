@@ -35,11 +35,12 @@ export default function ChatInterface() {
   const [loadingChat, setLoadingChat] = useState<boolean>(true)
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [activeButton, setActiveButton] = useState<ActiveButton>('none')
-  const [chatList, setChatList] = useState<number[]>([])
-  const addChat = (id: number) => {
+  const [chatList, setChatList] = useState<{ id: number; title: string }[]>([])
+
+  const addChat = (id: number, title: string) => {
     setChatList((prev) => {
-      if (prev.includes(id)) return prev
-      const updated = [id, ...prev]
+      if (prev.some((chat) => chat.id === id)) return prev
+      const updated = [{ id, title }, ...prev]
       localStorage.setItem('chatHistory', JSON.stringify(updated))
       return updated
     })
@@ -63,7 +64,12 @@ export default function ChatInterface() {
     const stored = localStorage.getItem('chatHistory')
     if (stored) {
       try {
-        setChatList(JSON.parse(stored))
+        const parsed = JSON.parse(stored)
+        const upgraded = parsed.map((item: any) =>
+          typeof item === 'number' ? { id: item, title: `Chat - ${item}` } : item
+        )
+        setChatList(upgraded)
+        localStorage.setItem('chatHistory', JSON.stringify(upgraded))
       } catch {
         setChatList([])
       }
@@ -281,16 +287,16 @@ export default function ChatInterface() {
             <div className="h-[1px] w-full bg-black" />
             <div>
               {chatList.length > 0 && menuOpen
-                ? chatList.map((id) => (
+                ? chatList.map(({ id, title }) => (
                     <p
                       key={id}
                       className={cn(
                         'cursor-pointer rounded-md px-4 py-2 text-xl hover:bg-gray-300',
-                        chatID === id && 'bg-gray-400'
+                        chatID === id && 'hover:gray-400 bg-gray-400'
                       )}
                       onClick={() => loadChatById(id)}
                     >
-                      Chat - {id}
+                      {title}
                     </p>
                   ))
                 : menuOpen && (

@@ -6,8 +6,8 @@ import { useDeleteMessage } from './useDeleteMessage'
 import { useRegenMessage } from './useRegenMessage'
 
 interface UseChatActionsParams {
-  addChat: (id: number) => void
-  setChatList: (list: number[]) => void
+  addChat: (id: number, title: string) => void
+  setChatList: (list: { id: number; title: string }[]) => void
   removeChat?: (id: number) => void
 }
 
@@ -41,7 +41,7 @@ export function useChatActions({ addChat, setChatList }: UseChatActionsParams) {
         setChatId(id)
         setMessages([])
         localStorage.setItem('currentChatID', id.toString())
-        addChat(id)
+        addChat(id, 'New Chat')
       }
     })
   }
@@ -91,22 +91,18 @@ export function useChatActions({ addChat, setChatList }: UseChatActionsParams) {
           const updated = prev.filter((m) => m.id !== userMessageId && m.id !== assistantMessageId)
 
           if (updated.length <= 0 && chatID) {
-            // 1. Remove chat data
             localStorage.removeItem(`messages:${chatID}`)
             localStorage.removeItem('currentChatID')
 
-            // 2. Remove chat from chatHistory
             const stored = localStorage.getItem('chatHistory')
-            const parsed = stored ? JSON.parse(stored) : []
-            const newList = parsed.filter((id: number) => id !== chatID)
+            const parsed: { id: number; title: string }[] = stored ? JSON.parse(stored) : []
+            const newList = parsed.filter((chat) => chat.id !== chatID)
             localStorage.setItem('chatHistory', JSON.stringify(newList))
 
-            // 3. Update state from ChatInterface
             setChatList(newList)
 
-            // 4. Reset state
             setChatId(undefined)
-          } else {
+          } else if (chatID) {
             localStorage.setItem(`messages:${chatID}`, JSON.stringify(updated))
           }
 
