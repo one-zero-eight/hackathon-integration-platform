@@ -106,7 +106,7 @@ jobs:
 
       - name: Деплой бэкенда
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.BACKEND_PATH }} && git pull && docker compose down && bash back-reload.sh"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.BACKEND_PATH }} && git pull && docker compose down && docker compose rmi backend-api && docker volume rm backend_postgres && docker compose up -d"
 
       - name: Деплой фронтенда
         run: |
