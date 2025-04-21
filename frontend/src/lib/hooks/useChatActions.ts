@@ -1,7 +1,6 @@
 'use client'
 import { useCallback, useState } from 'react'
 import { MessageData } from '../interfaces'
-import { useCreateChat } from './useCreateChat'
 import { useDeleteMessage } from './useDeleteMessage'
 import { useRegenMessage } from './useRegenMessage'
 
@@ -16,12 +15,6 @@ export function useChatActions({ addChat, setChatList }: UseChatActionsParams) {
   const [messages, setMessages] = useState<MessageData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isAssistantResponding, setIsAssistantResponding] = useState(false)
-
-  const createChatMutation = useCreateChat((id) => {
-    setChatId(id)
-    localStorage.setItem('currentChatID', id.toString())
-    setMessages([])
-  })
 
   const regenMessageMutation = useRegenMessage()
   const deleteMessageMutation = useDeleteMessage()
