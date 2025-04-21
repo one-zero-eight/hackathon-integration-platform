@@ -83,6 +83,10 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
+      - name: Проверка SSH-подключения
+        run: |
+          ssh -o StrictHostKeyChecking=no -T ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} echo "SSH подключение работает!"  
+
       - name: Получение кода
         uses: actions/checkout@v4
 

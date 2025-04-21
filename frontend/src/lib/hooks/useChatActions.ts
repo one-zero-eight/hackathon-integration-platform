@@ -1,15 +1,21 @@
 'use client'
-import { useChatHistory } from '@/lib/hooks/useChatHistory'
 import { useCallback, useState } from 'react'
 import { MessageData } from '../interfaces'
 import { useCreateChat } from './useCreateChat'
 import { useDeleteMessage } from './useDeleteMessage'
 import { useRegenMessage } from './useRegenMessage'
-export function useChatActions() {
+
+interface UseChatActionsParams {
+  addChat: (id: number, title: string) => void
+  setChatList: (list: { id: number; title: string }[]) => void
+  removeChat?: (id: number) => void
+}
+
+export function useChatActions({ addChat, setChatList }: UseChatActionsParams) {
   const [chatID, setChatId] = useState<number | undefined>()
   const [messages, setMessages] = useState<MessageData[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const { addChat } = useChatHistory()
+  const [isAssistantResponding, setIsAssistantResponding] = useState(false)
 
   const createChatMutation = useCreateChat((id) => {
     setChatId(id)
@@ -35,7 +41,7 @@ export function useChatActions() {
         setChatId(id)
         setMessages([])
         localStorage.setItem('currentChatID', id.toString())
-        addChat(id)
+        addChat(id, 'New Chat')
       }
     })
   }
@@ -43,6 +49,8 @@ export function useChatActions() {
   const handleRegenerateMessage = useCallback(
     async (message_id: number) => {
       try {
+        setIsAssistantResponding(true)
+
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === message_id ? { ...msg, message: '', isLoading: true } : msg
@@ -68,10 +76,12 @@ export function useChatActions() {
         console.error('Error regenerating message:', error)
       } finally {
         setIsLoading(false)
+        setIsAssistantResponding(false)
       }
     },
     [regenMessageMutation]
   )
+
   const handleDeleteMessage = useCallback(
     async (userMessageId: number, assistantMessageId: number) => {
       try {
@@ -82,6 +92,18 @@ export function useChatActions() {
 
           if (updated.length <= 0 && chatID) {
             localStorage.removeItem(`messages:${chatID}`)
+            localStorage.removeItem('currentChatID')
+
+            const stored = localStorage.getItem('chatHistory')
+            const parsed: { id: number; title: string }[] = stored ? JSON.parse(stored) : []
+            const newList = parsed.filter((chat) => chat.id !== chatID)
+            localStorage.setItem('chatHistory', JSON.stringify(newList))
+
+            setChatList(newList)
+
+            setChatId(undefined)
+          } else if (chatID) {
+            localStorage.setItem(`messages:${chatID}`, JSON.stringify(updated))
           }
 
           return updated
@@ -90,8 +112,9 @@ export function useChatActions() {
         console.error('Failed to delete messages:', error)
       }
     },
-    [chatID, deleteMessageMutation]
+    [chatID, deleteMessageMutation, setChatList]
   )
+
   return {
     chatID,
     setChatId,
@@ -101,6 +124,8 @@ export function useChatActions() {
     setIsLoading,
     handleNewChat,
     handleRegenerateMessage,
-    handleDeleteMessage
+    handleDeleteMessage,
+    isAssistantResponding,
+    setIsAssistantResponding
   }
 }

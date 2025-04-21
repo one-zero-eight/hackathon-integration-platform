@@ -22,7 +22,7 @@ class MwsEmbeddings(Embeddings):
         api_key: str,
         endpoint: str = MWS_GPT_API_EMBEDDING_ENDPOINT,
         model: Models = Models.BGE_M3,
-        max_batch_size: int = 10,
+        max_batch_size: int = 100,
     ) -> None:
         self.api_key = api_key
         self.endpoint = endpoint

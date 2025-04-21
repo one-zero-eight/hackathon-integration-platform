@@ -8,13 +8,15 @@ export function useChatHook({
   saveSelection,
   restoreSelection,
   activeButton,
-  setActiveButton
+  setActiveButton,
+  isAssistantResponding
 }: {
   isLoading: boolean
   isMobile: boolean
   handleSubmit: (e?: any) => void
   saveSelection: () => void
   restoreSelection: () => void
+  isAssistantResponding: boolean
   activeButton: ActiveButton
   setActiveButton: React.Dispatch<React.SetStateAction<ActiveButton>>
 }) {
@@ -22,7 +24,7 @@ export function useChatHook({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (isLoading) return
+      if (isLoading || isAssistantResponding) return
 
       if (e.key === 'Enter' && e.metaKey) {
         e.preventDefault()
@@ -45,10 +47,13 @@ export function useChatHook({
     },
     [isLoading, saveSelection, restoreSelection]
   )
-  const handleCopy = useCallback(async (text: string, messageId: number) => {
+  const handleCopy = useCallback(async (text: string, messageId: number | undefined) => {
     try {
       await navigator.clipboard.writeText(text)
-      setCopiedMessageId(messageId)
+      if (messageId != undefined) {
+        setCopiedMessageId(messageId)
+      }
+
       setTimeout(() => setCopiedMessageId(null), 2000)
     } catch (err) {
       console.error('Failed to copy: ', err)

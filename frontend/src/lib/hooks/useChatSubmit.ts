@@ -16,10 +16,12 @@ interface UseChatSubmitProps {
   setInputValue: (val: string) => void
   resetTextareaHeight: () => void
   setHasTyped: (val: boolean) => void
+  isAssistantResponding: boolean
   setActiveButton: (btn: 'none') => void
+  setIsAssistantResponding: (val: boolean) => void
   setIsLoading: (val: boolean) => void
   handleSetLocalStorage: (id: number) => void
-  addChat: (id: number) => void // 🆕 new!
+  addChat: (id: number, title: string) => void
 }
 export const useChatSubmit = ({
   chatID,
@@ -33,6 +35,8 @@ export const useChatSubmit = ({
   setActiveButton,
   setIsLoading,
   handleSetLocalStorage,
+  isAssistantResponding,
+  setIsAssistantResponding,
   addChat
 }: UseChatSubmitProps) => {
   const startChatMutation = useStartChat()
@@ -41,9 +45,11 @@ export const useChatSubmit = ({
   const handleSubmit = useCallback(
     async (e?: React.FormEvent) => {
       if (e) e.preventDefault()
-      if (!inputValue.trim()) return
+      if (!inputValue.trim() || isAssistantResponding) return
 
       setIsLoading(true)
+      setIsAssistantResponding(true)
+
       const userMessage = inputValue.trim()
       const userMessageId = Date.now()
       const assistantMessageId = userMessageId + 1
@@ -56,7 +62,7 @@ export const useChatSubmit = ({
           dialogID = id
           setChatId(id)
           handleSetLocalStorage(id)
-          addChat(id) // 🆕 add chat to history
+          addChat(id, userMessage.slice(0, 30))
         }
 
         if (!dialogID) return
@@ -110,6 +116,7 @@ export const useChatSubmit = ({
         console.error('Failed to send message:', err)
       } finally {
         setIsLoading(false)
+        setIsAssistantResponding(false)
       }
     },
     [
