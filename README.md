@@ -77,7 +77,7 @@ nano frontend/.env
 
 ## 🖼️ Демо
 
-![demo](https://github.com/one-zero-eight/hackathon-integration-platform/raw/main/assets/demo.gif)
+![demo](https://imgur.com/a/json-builder-znqtCRE)
 
 ---
 
