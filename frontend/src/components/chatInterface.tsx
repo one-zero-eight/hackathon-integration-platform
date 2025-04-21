@@ -333,7 +333,7 @@ export default function ChatInterface() {
                 <Menu className="!h-8 !w-8 text-black" />
               )}
             </Button>
-            <h1 className="text-3xl font-medium text-gray-800">JSON Generator</h1>
+            <h1 className="text-3xl font-medium text-gray-800">Schema Generator</h1>
           </div>
         </header>
 
@@ -440,7 +440,7 @@ export default function ChatInterface() {
           >
             {isNewChat && (
               <h1 className="mb-4 text-center text-lg md:text-xl lg:text-3xl xl:text-4xl">
-                Hello how can i help you ?
+                Describe your JSON
               </h1>
             )}
             <form
