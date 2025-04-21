@@ -34,16 +34,6 @@ export function useChatActions({ addChat, setChatList }: UseChatActionsParams) {
 
     setMessages([])
     setChatId(undefined)
-
-    createChatMutation.mutate(undefined, {
-      onSuccess: (res) => {
-        const id = res.id
-        setChatId(id)
-        setMessages([])
-        localStorage.setItem('currentChatID', id.toString())
-        addChat(id, 'New Chat')
-      }
-    })
   }
 
   const handleRegenerateMessage = useCallback(
