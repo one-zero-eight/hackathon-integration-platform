@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Production stage. Copy only runtime deps that were installed in the Builder stage.
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS production
 
-RUN apt-get update && apt-get install --no-install-recommends -y curl vim
+RUN apt-get update && apt-get install --no-install-recommends -y curl vim nano
 
 ENV PYTHONUNBUFFERED=1
 
