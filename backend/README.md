@@ -1,202 +1,123 @@
-# MWS AI JSON Builder backend
+# Backend - MWS AI JSON Builder
 
-## About
+[![Python][Python]][Python-url] [![uv][uv]][uv-url] [![FastAPI][FastAPI]][FastAPI-url]  
+[![Pydantic][Pydantic]][Pydantic-url] [![MWS GPT API][MWS-GPT-API]][MWS-GPT-API-url]  
+[![LangChain][LangChain]][LangChain-url] [![Ruff][Ruff]][Ruff-url]  
+[![pre-commit][pre-commit]][pre-commit-url] [![Docker][Docker]][Docker-url] [![Docker Compose][Docker-Compose]][Docker-Compose-url]
 
-This is a backend system for AI Schema Builder
+---
 
-### Technologies
-- [Python 3.12](https://www.python.org/downloads/) & [uv](https://github.com/astral-sh/uv)
-- [FastAPI](https://fastapi.tiangolo.com/) & [Pydantic](https://docs.pydantic.dev/latest/)
-- AI: [MWS GPT API](https://api.gpt.mws.ru/), [LangChain](https://www.langchain.com/)
-- Formatting and linting: [Ruff](https://docs.astral.sh/ruff/), [pre-commit](https://pre-commit.com/)
-- Deployment: [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/)
+## 🛠️ Deployment
 
-## Deployment
-1. Copy the file with settings: `cp settings.example.yaml settings.yaml`
-2. Change settings in the `settings.yaml` file according to your needs
-   (check [settings.schema.yaml](settings.schema.yaml) for more info)
-3. Build a Docker image: `docker compose build --pull`
-4. Run the container: `docker compose up --detach`
-5. Check the logs: `docker compose logs -f`
+```bash
+# 1. Copy config template
+cp settings.example.yaml settings.yaml
 
-## Endpoints
+# 2. Configure your settings
+nano settings.yaml  # (refer to settings.schema.yaml for details)
 
-Swagger documentation is available on the server on `/docs` endpoint.   
-Endpoints of system are separated into 3 main groups.  
-Details regarding input and output of endpoints can be found in Swagger
-documentation.
+# 3. Build & run
+docker compose build --pull
+docker compose up --detach
 
-### **Messages**
-That group provides functionality to create messages manually filling all fields.
-That group usually should be avoided in favour of `/chat` group, which provide
-safer and more convenient interface for creation messages during dialog.  
-Each message has `id`, `dialog_id`, `role`, `message`, `model`, `reply_to` fields
-(`model` and `reply_to` are optional)
+# 4. Monitor logs
+docker compose logs -f
+```
 
+---
 
-#### Create Message
+## 📚 API Endpoints
 
-Creates a new message using the provided message data.
-**URL:** `/message/create`
-**Method:** `POST`
-**Request Body:** A `CreateMessage` object containing the message details
-**Returns:** A `ViewMessage` object of the created message
+Explore interactive docs at `/docs` (Swagger UI)  
+All endpoints return JSON and use standard HTTP status codes.
 
+### 💬 **Messages API**  
+_For direct message management (use /chat for safer interface)_
 
-#### Get Message
+| Endpoint | Method | Description | Parameters |
+|----------|--------|-------------|------------|
+| `/message/create` | `POST` | Create new message | `CreateMessage` object |
+| `/message/get` | `GET` | Get message by ID | `message_id` (int) |
+| `/message/delete` | `DELETE` | Delete message | `message_id` (int) |
 
-Retrieves a specific message by its ID.  
-**URL:** `/message/get`  
-**Method:** `GET`  
-**Parameters:**  
-- `message_id` (integer, required): The ID of the message to retrieve  
+**Example Request:**
+```http
+POST /message/create
+Content-Type: application/json
 
-**Returns:** A `ViewMessage` object  
-**Errors:** 404 if message not found  
+{
+  "dialog_id": 42,
+  "role": "user",
+  "message": "Hello AI!"
+}
+```
 
+---
 
-#### Delete Message
+### 🗂️ **Dialogs API**  
+_Manage conversation containers_
 
-Deletes a specific message by its ID.  
-**URL:** `/message/delete`  
-**Method:** `DELETE`  
-**Parameters:**  
-- `message_id` (integer, required): The ID of the message to delete  
+| Endpoint | Method | Description | Parameters |
+|----------|--------|-------------|------------|
+| `/dialog/create_dialog` | `POST` | Create empty dialog | - |
+| `/dialog/get_dialog` | `GET` | Get dialog metadata | `dialog_id` |
+| `/dialog/get_existing` | `GET` | List all dialogs | - |
+| `/dialog/get_history` | `GET` | Get message history | `dialog_id`, `amount` (optional) |
+| `/dialog/delete_dialog` | `DELETE` | Remove dialog | `dialog_id` |
 
-**Returns:** The deleted `ViewMessage` object  
-**Errors:** 404 if message not found  
+---
 
+### 🤖 **Chat API**  
+_Conversational interface with LLM_
 
-### **Dialog**
-That group provides functionality for managing dialogs.  
-Each `dialog` has `id` and list of `messages`
+| Endpoint | Method | Description | Parameters |
+|----------|--------|-------------|------------|
+| `/chat/create_message` | `POST` | Add user message | `dialog_id`, `message` |
+| `/chat/chat_completion` | `GET` | Get AI response | `dialog_id`, `model` |
+| `/chat/regenerate` | `POST` | Regenerate AI reply | `message_id` |
+| `/chat/delete_message` | `DELETE` | Remove user message | `message_id` |
 
+**Typical Flow:**
+1. Create dialog → `/dialog/create_dialog`
+2. Post message → `/chat/create_message`
+3. Get AI reply → `/chat/chat_completion`
+4. Repeat 2-3 as needed
 
-#### Create Dialog
+---
 
-Creates a new dialog with no messages.  
-**URL**: `/dialog/create_dialog`  
-**Method**: `POST`  
-**Parameters**: `None`  
-**Returns**: A `ViewDialog` object of the created dialog  
+## 🔧 Tech Stack
 
+| Component | Description |
+|-----------|-------------|
+| **Python 3.12** | Core runtime |
+| **FastAPI** | Modern async framework |
+| **Pydantic** | Data validation & settings |
+| **MWS GPT API** | AI capabilities |
+| **LangChain** | LLM integration |
+| **Docker** | Containerization |
 
-#### Get Dialog
+---
 
-Retrieves information about a specific dialog.  
-**URL**: `/dialog/get_dialog`  
-**Method**: `GET`  
-**Parameters**:
-`dialog_id` (integer, required): The ID of the dialog to retrieve
-**Returns**: A `ViewDialog` object  
-**Errors**: `404` if dialog not found   
+## ⚠️ Deprecation Notice
+`/chat/get_history` → Use `/dialog/get_history` instead
 
-
-#### Get All Dialogs
-
-Retrieves a list of all dialogs in the system.  
-**URL**: `/dialog/get_existing`  
-**Method**: `GET`  
-**Parameters**: `None`  
-**Returns**: A list of `ViewDialog` objects  
-
-
-#### Get Dialog History
-
-Retrieves message history from a specific dialog.  
-**URL**: `/dialog/get_history`  
-**Method**: `GET`  
-**Parameters**:  
-- `dialog_id` (integer, required): The ID of the dialog  
-- `amount` (integer, optional): Number of most recent messages to retrieve. If not provided, returns all messages.  
-
-**Returns**: A list of `ViewMessage` objects  
-**Errors**: `404` if dialog not found  
-
-
-#### Delete Dialog
-
-Deletes a specific dialog from the system.  
-**URL**: `/dialog/delete_dialog`  
-**Method**: `DELETE`  
-**Parameters**:  
-- `dialog_id` (integer, required): The ID of the dialog to delete  
-
-**Returns**: The deleted `ViewDialog` object  
-**Errors**: `404` if dialog not found  
-
-
-### **Chat**
-That group provides functionality for chatting with LLM models
-
-
-#### Create User Message
-
-Creates a new user message in the specified dialog.  
-**URL:** `/chat/create_message`  
-**Method:** `POST`  
-**Request Body:**
-- `dialog_id` (integer, required): The ID of the dialog
-- `message` (string, required): The content of the user message
-
-**Returns:** A `ViewMessage` object of the created message
-**Errors:**
-- `404` if dialog not found
-- `400` if the last message in the dialog is already a user message
-
-
-#### Generate AI Response
-
-Generates an AI response to the most recent user message in the specified dialog.  
-**URL:** `/chat/chat_completion`  
-**Method:** `GET`  
-**Parameters:**
-- `dialog_id` (integer, required): The ID of the dialog
-- `model` (Models enum, required): The AI model to use for generating the response
-
-**Returns:** A `ViewMessage` object containing the AI response
-**Errors:**
-- 404 if dialog not found
-- 400 if the last message is already an AI reply
-
-
-#### Get Message History (Deprecated)
-
-Retrieves message history from a specific dialog. This endpoint is deprecated in favor of `/dialog/get_history`.
-**URL:** `/chat/get_history`
-**Method:** `GET`
-**Parameters:**
-- `dialog_id` (integer, required): The ID of the dialog
-- `amount` (integer, default=0): Number of most recent messages to retrieve. If 0, returns all messages.
-
-**Returns:** A list of `ViewMessage` objects
-**Errors:** 404 if dialog not found
-
-
-#### Delete Message
-
-Deletes a specific user message.
-**URL:** `/chat/delete_message`
-**Method:** `DELETE`
-**Parameters:**
-- `message_id` (integer, required): The ID of the message to delete
-
-**Returns:** The `ViewMessage` of deleted message  
-**Errors:**
-- 404 if message not found
-- 400 if trying to delete a non-user message
-
-
-#### Regenerate AI Response
-
-Regenerates an AI response for a specific message.
-
-**URL:** `/chat/regenerate`
-**Method:** `POST`
-**Parameters:**
-- `message_id` (integer, required): The ID of the AI response message to regenerate
-
-**Returns:** A `ViewMessage` object containing the newly generated AI response
-**Errors:**
-- 404 if message not found
-- 400 if the message is not a response
+[Python]: https://img.shields.io/badge/Python_3.12-000000?style=for-the-badge&logo=python
+[Python-url]: https://www.python.org/downloads/
+[uv]: https://img.shields.io/badge/uv-000000?style=for-the-badge&logo=python
+[uv-url]: https://github.com/astral-sh/uv
+[FastAPI]: https://img.shields.io/badge/FastAPI-000000?style=for-the-badge&logo=fastapi
+[FastAPI-url]: https://fastapi.tiangolo.com/
+[Pydantic]: https://img.shields.io/badge/Pydantic-000000?style=for-the-badge&logo=pydantic
+[Pydantic-url]: https://docs.pydantic.dev/latest/
+[MWS-GPT-API]: https://img.shields.io/badge/MWS_GPT_API-000000?style=for-the-badge&logo=openai
+[MWS-GPT-API-url]: https://api.gpt.mws.ru/
+[LangChain]: https://img.shields.io/badge/LangChain-000000?style=for-the-badge&logo=langchain
+[LangChain-url]: https://www.langchain.com/
+[Ruff]: https://img.shields.io/badge/Ruff-000000?style=for-the-badge&logo=ruff
+[Ruff-url]: https://docs.astral.sh/ruff/
+[pre-commit]: https://img.shields.io/badge/pre--commit-000000?style=for-the-badge&logo=pre-commit
+[pre-commit-url]: https://pre-commit.com/
+[Docker]: https://img.shields.io/badge/Docker-000000?style=for-the-badge&logo=docker
+[Docker-url]: https://www.docker.com/
+[Docker-Compose]: https://img.shields.io/badge/Docker_Compose-000000?style=for-the-badge&logo=docker
+[Docker-Compose-url]: https://docs.docker.com/compose/
