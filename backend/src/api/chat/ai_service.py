@@ -55,7 +55,6 @@ class ConditionalPipeline:
     If you consider that data meets requirements provide very brief explanation without much details.
     Respond strictly in JSON with the shape:
     {"is_valid": bool, "message": string}
-    Return json as plain text without any formatting.
     """.strip()
 
     def __init__(
